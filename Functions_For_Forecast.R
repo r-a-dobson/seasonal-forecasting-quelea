@@ -3,7 +3,7 @@
 # Functions for generating seasonal forecasts for the red-billed quelea (Quelea#
 # quelea)                                                                      # 
 #                                                                              #
-# Code for: Seasonal forecasting of mobile species geographical distributions  #
+# Code for: Seasonal forecasting of mobile species distributions               #
 # for dynamic management under extreme weather events.                         #
 #                                                                              #
 # Rachel Dobson, Stephen G. Willis, Stewart Jennings, Robert A. Cheke,         #
