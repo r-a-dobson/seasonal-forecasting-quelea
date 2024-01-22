@@ -5,14 +5,14 @@
 In this repository, we provide code and data for generating seasonal forecasts of red-billed quelea (*Quelea* *quelea*) distribution suitability up to seven months ahead. 
 
 Our code is highly flexible. In this first step, you can specify the: 
- - `Spatial extent:` country or countries to forecast across (or your own custom
-`sf` polygon). Please note all SDMs are trained on Quelea quelea lathamii
- records from southern Africa countries.
+ - `Spatial extent:` country or countries to generate seasonal forecasts across (or provide your own custom
+`sf` polygon). Please note all species distribution models (SDMs) are trained on *Quelea quelea lathamii*
+ records from southern Africa.
 
 - `Spatial resolution:` given in degrees, this value specifies the spatial
  resolution for the output seasonal forecasts.
 
-- `Temporal extent:` the month and year to initiate the seasonal forecast. ECMWF
+- `Temporal extent:` the month and year to initiate the seasonal forecast. European Centre for Medium-Range Weather Forecasts (ECMWF)
  SEAS5 forecasts have an initial date of the 1st of each month, and run for 7
  months. These data are released on the 5th of each month. We recommend
  choosing the closest available month.
@@ -23,12 +23,12 @@ Our code is highly flexible. In this first step, you can specify the:
 
 Once you have specified these details in the first step, the rest of the code
  does not need to be edited aside from giving your Climate Data Store (CDS)
- username and key (Step 2), and your Google Earth Engine/Google Drive email
+ username and key (Step 2), and your Google Earth Engine and Google Drive email
  (Step 4).
 
-Before beginning the script, please ensure that all necessary packages have been installed and that you have registered for free Climate Data Store,
-Google Earth Engine and Google Drive accounts. These are required for download 
-of seasonal forecast and historical data used to generate forecasts.
+Before beginning the script, please ensure that all necessary packages have been installed and that you have registered for free [Climate Data Store](https://cds.climate.copernicus.eu/#!/home),
+[Google Earth Engine](https://developers.google.com/earth-engine/) and [Google Drive](https://www.google.co.uk/intl/en-GB/drive/) accounts. These are required for download 
+of seasonal forecast and historical data that are used to generate seasonal forecasts.
 
 The final output of this script are seasonal forecasts of quelea distribution suitability, exported in both `tif` and `png` format.
 
