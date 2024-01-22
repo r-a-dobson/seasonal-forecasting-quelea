@@ -4,7 +4,7 @@
 
 In this repository, we provide code and data for generating seasonal forecasts of red-billed quelea (*Quelea* *quelea*) distribution suitability up to seven months ahead. 
 
-Our code is highly flexible. In this first step, you can specify the: 
+Our code is highly flexible, you can specify the: 
  - `Spatial extent:` country or countries to generate seasonal forecasts across (or provide your own custom
 `sf` polygon). Please note all species distribution models (SDMs) are trained on *Quelea quelea lathamii*
  records from southern Africa.
@@ -25,7 +25,7 @@ Before beginning the script, please ensure that all necessary packages have been
 [Google Earth Engine](https://developers.google.com/earth-engine/) and [Google Drive](https://www.google.co.uk/intl/en-GB/drive/) accounts. These are required for download 
 of seasonal forecast and historical datasets that are used to generate the seasonal forecasts.
 
-The final output of this script are seasonal forecasts of quelea distribution suitability, exported in both `tif` and `png` format.
+The final output of the script are seasonal forecasts of quelea distribution suitability in both `tif` and `png` format.
 
 
 # Repository structure
