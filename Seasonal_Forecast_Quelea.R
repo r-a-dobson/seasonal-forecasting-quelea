@@ -14,9 +14,9 @@
 # Step 1: Set up and seasonal forecast specification
 #------------------------------------------------------------------------------
 # This script includes the code for every step in generating seasonal forecasts
-# of red-billed quelea distribution suitability. Please ensure that you have
-# downloaded the Zenodo folder that contains associated data sets and custom
-# functions written for this script.
+# of red-billed quelea distribution. Please ensure that you have downloaded the
+# GitHub repository that contains the associated data sets and custom functions
+# written for this script.
 #
 # Our code is highly flexible. In this first step, you can specify the: 
 #
@@ -28,30 +28,30 @@
 # resolution for the output seasonal forecasts.
 #
 # -	Temporal extent: the month and year to initiate the seasonal forecast. ECMWF
-# SEAS5 forecasts have an initial date of the 1st of each month, and run for 7
-# months. These data are released on the 5th of each month. We recommend
+# SEAS5 forecasts have an initial date of the 1st of each month, and run to 7
+# months ahead. These data are released on the 5th of each month. We recommend
 # choosing the closest available month.
 #
 # -	Temporal resolution: the intervals to generate seasonal forecasts at between
 # zero and seven months ahead of the initiation date. This can range from daily
 # to weekly to monthly intervals depending on your needs.
 #
-# Once you have specified these details in the first step, the rest of the code
+# Once you have specified these details in this first step, the rest of the code
 # does not need to be edited aside from giving your Climate Data Store (CDS)
 # username and key (Step 2), and your Google Earth Engine/Google Drive email
 # (Step 4).
 #
-# Final output of this script are quelea distribution suitability forecasts
+# Output of this script are quelea distribution suitability forecasts
 # for each interval within the seasonal forecast. This is exported in both tif
-# format and png image of plotted suitability maps in ggplot2.
+# and png image format.
 
-# Provide path to "seasonal_forecasting_quelea" directory downloaded from Zenodo
-directory <- "C:/Users/xxxxx/Downloads/seasonal_forecasting_quelea/"
+# Provide path to "seasonal_forecasting_quelea" directory downloaded from GitHub
+directory <- "C:/Users/XXXXX/Downloads/seasonal_forecasting_quelea/"
 
 # Set this directory as your working directory for analyses
 setwd(directory)
 
-# Before beginning the script, please ensure that all necessary packages have
+# Before running the script, please ensure that all necessary packages have
 # been installed and that you have registered for free Climate Data Store,
 # Google Earth Engine and Google Drive accounts. These are required for download
 # of forecast and historical data sets throughout the seasonal forecasting
@@ -64,7 +64,7 @@ install.packages(packages_to_install)
 
 # Temporal extent to extract 
 forecast_year<- "2024"
-forecast_month<- "1"
+forecast_month<- "1"    # Example initiation date of 1 January 2024
 
 # Create forecast initiation date
 forecast_intitiation <- as.Date(paste0(forecast_year, "-",forecast_month,"-01"))
@@ -88,7 +88,7 @@ forecast_intervals <- dynamic_proj_dates(startdate = as.character(forecast_intit
 
 # Spatial extent 
 library(rnaturalearth)
-# Alternatively provide an `sf` polygon for specific region
+# Alternatively provide an `sf` polygon for specific region of interest
 spatial_extent <- ne_countries(country = c('South Africa', # Any country globally could be given here
                                            'Botswana',
                                            'Lesotho',
@@ -121,8 +121,8 @@ library(raster)
 #----------------------------
 
 # Get Climate Data Store account and set log-in details
-user_number <- "" # Replace with your details
-user_key <- "" 
+user_number <- "XXXXX" # Replace with your details
+user_key <- "XXXXX" 
 wf_set_key(user = user_number, key = user_key, service = "cds")
 
 # Spatial extent to extract (CDS requires non-polygon format)
@@ -319,8 +319,9 @@ dynamicSDM::extract_dynamic_raster(dates = dates,
 # Step 5: Download daily from three months previous to in-fill gap
 #------------------------------------------------------------------------------
 
-# Now extract the data for the three month gap from previous three months before 
-# forecast initiation. Using each month at one-month lead-time. 
+# Now extract the data for the three month gap from the previous three seasonal
+# forecasts at one-month lead-times.
+
 
 # Iterates through each month, extracting SEAS5 data for this interval
 
@@ -408,7 +409,8 @@ ncfile <- wf_request(
 # Step 6: Extract daily ensemble-median for three months previous to in-fill gap
 #------------------------------------------------------------------------------
 
-# Again iterates through one to three months from initiation and extracts daily
+# Again, iterates through one to three months prior to initiation and extracts
+# the daily precipitation and temperature data
 
 for (month in 1:3) {
   
@@ -447,8 +449,9 @@ extract_daily_precipitation(one_month = TRUE,
 # Step 7: Combine historical + forecast to calculate 8- and 52-week variables
 #------------------------------------------------------------------------------
 
-# Run function to resample all weather data to spatial resolution and extent specified
-# This ensures that they will all stack for calculation
+# Runs a function to resample all the daily weather data to the spatial
+# resolution and spatial extent specified. This ensures that all data will stack
+# for variable calculation.
 
 resample_daily_weather(daily_dir = paste0(directory, "/Data/daily/"),
                        spatial_resolution = spatial_resolution,
@@ -498,19 +501,20 @@ extract_proc_var(
 # Step 8: Download and process most recently available MODIS Land Cover dataset
 #------------------------------------------------------------------------------
 
-# Generated moving window matrix for resource variable sum across 10km dispersal
-# radius of quelea, accounting for area of cell. 
+# Generate moving window matrix for summing resource variables across the 10km
+# dispersal radius of quelea.
+
 matrix <- dynamicSDM::get_moving_window(radial.distance = 10000,
                                         spatial.res.degrees = spatial_resolution,
                                         spatial.ext = southernafrica)
 
-# MODIS Land Cover typically released at two-year lag but check catalog:
+# MODIS Land Cover Type typically released at two-year lag but check catalog:
 #https://developers.google.com/earth-engine/datasets/catalog/MODIS_061_MCD12Q1
-# Change number in brackets to 1 if last year's has been released etc.
+# Change the number in brackets to 1 if last year's has been released sooner.
 resource_date <- forecast_intitiation %m-% years(2) 
 
-# Extracting from Google Earth Engine again - check still authenticated and 
-# initialise session. 
+# Extracting from Google Earth Engine again - check rgee is still authenticated
+# and initialise the session.
 library(rgee)
 library(stars)
 library(googledrive)
@@ -522,10 +526,10 @@ rgee::ee_check_credentials()
 googledrive::drive_auth()
 googledrive::drive_user()
 
-# Total available shrubland, grassland and cereal cropland cells in area
-# Extracted at 500m, then aggregated by 12 to 0.05
-# Then using moving window, sum of all cells of those categories in surrounding
-# area. See manuscript for more details. 
+# Total available "shrubland", "grassland" and "cereal cropland" cells in area
+# Extracted at 0.04 degree spatial resolution, then aggregated by 12 to 0.05
+# degree spatial resolution. Then, using the moving window, sum values of each
+# cell with surrounding eight cells to get final resource availability value.
 
 extract_buffered_raster(dates = resource_date,
                         spatial.ext = spatial_extent,
@@ -542,7 +546,7 @@ extract_buffered_raster(dates = resource_date,
                         save.directory =  paste0(directory, "/Data/processed/"))
 
 
-# Total available surface water
+# Total available surface water in accessible area
 extract_buffered_raster(dates = resource_date,
                         spatial.ext = spatial_extent,
                         datasetname = "MODIS/061/MCD12Q1",
@@ -558,7 +562,7 @@ extract_buffered_raster(dates = resource_date,
                         save.directory =  paste0(directory, "/Data/processed/"))
 
 
-# Total available trees
+# Total available trees in accessible area
 extract_buffered_raster(dates = resource_date,
                         spatial.ext = spatial_extent,
                         datasetname = "MODIS/061/MCD12Q1",
@@ -590,9 +594,9 @@ extract_dynamic_raster(dates = resource_date,
 # Step 9: Extract EVI data from Google Earth Engine 
 #------------------------------------------------------------------------------
 
-# EVI available two-week lag from real-time. 
-# For seed abundance modelling need data from 52-weeks to 2-weeks prior to
-# forecast initation. 
+# Enhanced vegetation index (EVI) data are available at two-week lag from
+# real-time. For seed abundance modelling need data from 52-weeks to 2-weeks
+# prior to forecast initiation.
 
 end_date <- as.character(forecast_intitiation - 14)
 end_date <- as.Date(paste0(strsplit(end_date, "-")[[1]][1], "-",
@@ -622,10 +626,10 @@ selected_dates <- modis_16_dates[modis_16_dates < end_date]
 selected_dates <- selected_dates[(length(selected_dates) - 26):length(selected_dates)]
 
 
-# Create directory for evi extraction
+# Create directory for EVI extraction
 dir.create(paste0(directory, "/Data/evi/"))
 
-# Extract rasters at 16-day intervals for deriving EVI characterstics from
+# Extract EVI rasters at 16-day intervals for deriving EVI characteristics from
 # See catalogue for dataset details:
 # https://developers.google.com/earth-engine/datasets/catalog/MODIS_MCD43A4_006_EVI
 
@@ -647,28 +651,30 @@ dynamicSDM::extract_dynamic_raster(dates = selected_dates,
 #------------------------------------------------------------------------------
 library(randomForest)
 
-# Read in MODIS Land Cover Yearly for most recent year extracted in previous step
+# Read in MODIS Land Cover Type Yearly for the most recent year (extracted in
+# step 8)
 landcover <- terra::rast(list.files(paste0(directory, "/Data/processed/"),
                                     full.names = T,
                                     pattern = "landcover")[1])
 
-# Run custom function for generating EVI characterstics from 16-day data extracted
-# in previous step.
+# Run custom function for extracting EVI characteristics from 16-day EVI data
+# extracted in previous step.
 seed_forecast_dataframe <- get_evi_characterstics(directory = paste0(directory, "/Data/evi/"),
                                                   land_cover = landcover,
                                                   spatial_ext = spatial_extent)
 
 
 # Read in fitted Random Forest classification models for classifying vegetation
-# phenology stages based upon EVI characterstics. 
+# phenology stages based upon 16-day EVI characteristics. 
 
 grass_classification_model <- readRDS(paste0(directory,"/Data/models/classification_model_grass.rds"))
 
 cereal_classification_model <- readRDS(paste0(directory,"/Data/models/classification_model_cereal.rds"))
 
 
-# Read in extracted mean vegetation growth stage lengths, derived from MODIS Land Cover Dynamics Yearly
-# See: https://developers.google.com/earth-engine/datasets/catalog/MODIS_061_MCD12Q1
+# Read in extracted mean vegetation growth stage lengths, derived from MODIS
+# Land Cover Dynamics Yearly See:
+# https://developers.google.com/earth-engine/datasets/catalog/MODIS_061_MCD12Q1
 
 mean_lengths<-list.files(paste0(directory, "/Data/average_length_phenology/"),
                          pattern = ".tif",
@@ -679,12 +685,12 @@ mean_lengths<-terra::rast(list(terra::rast(mean_lengths[1]), # green-up
                               (terra::rast(mean_lengths[5]) + terra::rast(mean_lengths[6])), # peak + senesence as classes collapsed
                                terra::rast(mean_lengths[3]))) # mid-green-down
 
-# Aggregate by mean to get general length at coarser resolution
+# Aggregate by mean to get average durations at coarser resolutions
 mean_lengths <- terra::aggregate(mean_lengths, 12, fun = "mean", na.rm = T)
 
 
-# Use custom function to project seed availability at every forecast intervals
-# based upon classifying EVI characterstics
+# Use custom function to project seed availability at every forecast interval
+# using 16-day EVI characteristics
 
 # Cereal seed
 project_seed_availability(EVI_data_frame = seed_forecast_dataframe,
@@ -709,42 +715,44 @@ project_seed_availability(EVI_data_frame = seed_forecast_dataframe,
                           forecast_intervals = forecast_intervals)
 
 
-# We want to add cereal and grass seed availability for each data to get total
+# We want to add cereal and grass seed availability for each date to get total
+# seed available to quelea 
 
-# Get list of seed rasters
+# Get list of generated seed rasters
 all_proc_rasts <- list.files(paste0(directory, "/Data/processed/"), full.names = T)
 seed_rasters <- all_proc_rasts[grepl("seed", all_proc_rasts)]
 
 # Iterate through each forecast interval date and combine grass + cereal
-
 for (interval in 1:length(forecast_intervals)) {
   
   seed_raster <- seed_rasters[grepl(forecast_intervals[interval], seed_rasters)]
+  
   seed_raster <- terra::rast(seed_raster[1]) + terra::rast(seed_raster[2])
+  
   writeRaster(seed_raster, file = paste0(directory, "/Data/processed/",
                                      forecast_intervals[interval],
                                      "_seed_abundance.tif"))
   
 }
 
-# Remove tifs from temporary directory as may include large file sizes.
+# Remove tifs from temporary directory as may contain very large files
 file.remove(list.files(tempdir(),pattern=".tif",full.names = T))
 
 #------------------------------------------------------------------------------
-# Step 11: Combined data into raster stacks for each forecast interval 
+# Step 11: Combine covariate data into raster stacks for each forecast interval 
 #------------------------------------------------------------------------------
 
 # Create directory for saving covariate stacks to
-
 dir.create(paste0(directory, "/Data/covariates/"))
 
 # Read in the annual resource rasters that remain static for each interval
 static <- all_proc_rasts[grepl("tree|habitat|water",all_proc_rasts)]
-static <-terra::rast(static)
+static <- terra::rast(static)
 
 # For each interval, this function reads in the dynamic weather/seed rasters 
-# generated so far; resamples them to same extent/resolution; and then
-# combines them with the annual resource variables to save as a raster stack.
+# generated, resamples them to the same extent/resolution; and then
+# combines them with the annual resource variables to extract as a raster stack.
+
 dynamicSDM::dynamic_proj_covariates(dates = forecast_intervals,
                                     varnames = c("mean_annual_temperature",
                                                  "mean_eight_temperature",
@@ -756,7 +764,7 @@ dynamicSDM::dynamic_proj_covariates(dates = forecast_intervals,
                                     local.directory = paste0(directory, "/Data/processed/") , 
                                     spatial.ext = spatial_extent ,
                                     spatial.mask = spatial_extent,
-                                    spatial.res.degrees = 0.05 ,
+                                    spatial.res.degrees = spatial_resolution ,
                                     resample.method = c("bilinear" ,
                                                         "bilinear" ,
                                                         "bilinear" ,
@@ -782,10 +790,10 @@ library(dynamicSDM)
 library(readr)
 library(gbm)
 library(pROC)
-# Read in breeding and non-breeding data with associated explanatory variables. 
 
-# See Dobson et al. (2023) for details and code for processing occurrence data
-# and extracting dynamic explanatory variables
+# Read in breeding and non-breeding quelea occurrence data with associated dynamic explanatory variables. 
+# See Dobson et al. (2023) for details and code used for processing occurrence data
+# and extracting the dynamic explanatory variables at: 
 # https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.14101
 
 quelea_breeding_data <- read.csv("Data/breeding_distribution_quelea.csv")
@@ -884,9 +892,11 @@ for (x in 1:length(unique(nonbreed_blocked$BLOCK.CATS))) {
 }
 
 
-#------------------------------------------------------------------------------
-# Step 13: Project distribution models onto forecast variables for each interval
-#------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------
+# Step 13: Project species distribution models onto forecast variables for each interval
+#--------------------------------------------------------------------------------------
+
+library(dynamicSDM)
 
 # Get forecast intervals for projecting breeding D-SDMs onto. 
 breeding_intervals <-  forecast_intervals[lubridate::month(forecast_intervals) %in%  c(12,1,2,3,4,5)]
@@ -898,8 +908,9 @@ nonbreeding_intervals <- forecast_intervals[!lubridate::month(forecast_intervals
 dir.create(paste0(directory,"/Output/"))
 dir.create(paste0(directory,"/Output/projections"))
 
-# Functions generate performance weighted forecasts of distribution suitability
-# for quelea across southern Africa. 
+# Functions generate performance-weighted forecasts of distribution suitability
+# for quelea across spatial extent.
+
 dynamic_proj(dates = breeding_intervals,
              projection.method = c("proportional"),
              local.directory = paste0(directory,"/Data/covariates/"),
@@ -922,88 +933,112 @@ dynamic_proj(dates = nonbreeding_intervals,
 
 
 #------------------------------------------------------------------------------
-# Step 14: Plot seasonal forecasts for sharable images
+# Step 14: Plot seasonal forecasts 
 #------------------------------------------------------------------------------
 
 library(png)
 library(ggplot2)
 
-# Create directory to save Seasonal Forecast images to. 
-dir.create(paste0(directory,"/Output/images"))
+# Create directory to save Seasonal Forecast pngs to. 
+dir.create(paste0(directory, "/Output/images"))
 
 # Get list of projection files, iterate through them, plotting and saving png image
 list_of_projections <- list.files(paste0(directory,"/Output/projections"), full.names = T)
 
 for(proj in 1:length(list_of_projections)){
 
-    file_name<-list_of_projections[proj]
-    
-    # Get date of projection
-    date<-strsplit(file_name,"/")[[1]]
-    date<-strsplit(date[length(date)],"_")[[1]][1]
-    
-    # Get lead-time of projection
-    leadtime<- as.numeric(forecast_intervals[proj]-forecast_intervals[1])
+  file_name <- list_of_projections[proj]
   
-    # Read in tif file and create data frame for plotting
-    proj_rast <- terra::rast(paste0(file_name))
-    proj_rast <- terra::crop(proj_rast, spatial_extent)
-    proj_rast <- terra::mask(proj_rast, spatial_extent)
-    proj_rast <- as.data.frame(proj_rast, xy = T)
-    colnames(proj_rast) <- c("x", "y", "var")
-    
-    # Define breaks for suitability categories
-    breaks <- c(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1)
-   
-    cols <- c("#F0F0F0",
-              "#40863A",
-              "#9EBD49",
-              "#FBF357",
-              "#F4C12F",
-              "#ED8E07",
-              "#DD4704",
-              "#cc0000",
-              "#990000",
-              "#660000")
-    
-    # Create suitability categories using cut()
-    proj_rast$categories <- cut(proj_rast$var, breaks = breaks, labels = FALSE)
-    proj_rast$categories <- factor(proj_rast$categories, levels = 1:10)
-    
-    p1<-ggplot(data = ra) +
-      geom_raster(aes(x = x, y = y, fill = categories))+ 
-      scale_fill_manual(values = cols,
-                        drop = F,
-                        name = "Forecast\nsuitability",
-                        labels =c("< 0.1",
-                                  "0.1 - 0.2",
-                                  "0.2 - 0.3",
-                                  "0.3 - 0.4",
-                                  "0.4 - 0.5",
-                                  "0.5 - 0.6",
-                                  "0.6 - 0.7",
-                                  "0.7 - 0.8",
-                                  "0.8 - 0.9",
-                                  "0.9 <") )+
-      theme_bw()+
-      coord_sf(expand = FALSE) +
-      theme(axis.title.x = element_blank(),
-            axis.title.y = element_blank(),
-            legend.key.size = unit(1, "cm"),
-            legend.text = element_text(size=25),
-            legend.title = element_text(size=25,face="bold"),
-            plot.title = element_text(size=25,hjust = 0.5,face="bold"),
-            axis.line=element_blank(),axis.ticks=element_blank(),axis.text=element_text(size=15))+
-      geom_sf(data = spatial_extent, fill = "NA",color = "black", size = 15, lwd = 1)
-    
-    
+  # Get date of projection
+  date <- strsplit(file_name, "/")[[1]]
+  date <- strsplit(date[length(date)], "_")[[1]][1]
+  
+  # Get lead-time of projection
+  leadtime <- as.numeric(forecast_intervals[proj] - forecast_intervals[1])
+  
+  # Read in tif file and create data frame for plotting
+  proj_rast <- terra::rast(paste0(file_name))
+  proj_rast <- terra::crop(proj_rast, spatial_extent)
+  proj_rast <- terra::mask(proj_rast, spatial_extent)
+  proj_rast <- as.data.frame(proj_rast, xy = T)
+  colnames(proj_rast) <- c("x", "y", "var")
+  
+  # Define breaks for suitability categories
+  breaks <- c(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1)
+  
+  cols <- c(
+    "#F0F0F0",
+    "#40863A",
+    "#9EBD49",
+    "#FBF357",
+    "#F4C12F",
+    "#ED8E07",
+    "#DD4704",
+    "#cc0000",
+    "#990000",
+    "#660000"
+  )
+  
+  # Create suitability categories using cut()
+  proj_rast$categories <- cut(proj_rast$var, breaks = breaks, labels = FALSE)
+  proj_rast$categories <- factor(proj_rast$categories, levels = 1:10)
+  
+  p1 <- ggplot(data = ra) +
+    geom_raster(aes(x = x, y = y, fill = categories)) +
+    scale_fill_manual(
+      values = cols,
+      drop = F,
+      name = "Forecast\nsuitability",
+      labels = c(
+        "< 0.1",
+        "0.1 - 0.2",
+        "0.2 - 0.3",
+        "0.3 - 0.4",
+        "0.4 - 0.5",
+        "0.5 - 0.6",
+        "0.6 - 0.7",
+        "0.7 - 0.8",
+        "0.8 - 0.9",
+        "0.9 <"
+      )
+    ) +
+    theme_bw() +
+    coord_sf(expand = FALSE) +
+    theme(
+      axis.title.x = element_blank(),
+      axis.title.y = element_blank(),
+      legend.key.size = unit(1, "cm"),
+      legend.text = element_text(size = 25),
+      legend.title = element_text(size = 25, face = "bold"),
+      plot.title = element_text(size = 25, hjust = 0.5, face = "bold"),
+      axis.line = element_blank(),
+      axis.ticks = element_blank(),
+      axis.text = element_text(size = 15)
+    ) +
+    geom_sf(
+      data = spatial_extent,
+      fill = "NA",
+      color = "black",
+      size = 15,
+      lwd = 1
+    )
+  
+  
    # Save plot image 
-    ggsave(p1,file =paste0(directory,"/Output/images/",date,"_",leadtime,"_proportional.png"),width=8, height=6)
+  ggsave(p1,
+         file = paste0(directory,
+                       "/Output/images/",
+                       date,
+                       "_",
+                       leadtime,
+                       "_proportional.png"),
+         width = 8,
+         height = 6)
     
   
 }
+
 ###############################################################################
-# If you have any questions or need help running any of the above code to
-# generate seasonal forecasts of red-billed quelea distribution, please contact
+# If you have any questions or need help running the above code, please contact
 # Rachel Dobson at eerdo@leeds.ac.uk
 ###############################################################################

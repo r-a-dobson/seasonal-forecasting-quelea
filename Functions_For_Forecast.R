@@ -11,11 +11,12 @@
 #                                                                              #
 ################################################################################
 #
-# This script does not need to be opened. It contains custom functions for
-# generating seasonal forecasts of red-billed quelea distribution. This file
-# will be used to load functions in the main script "Seasonal_Forecast_Quelea.R"
+# This script does not need to be opened or edited. It contains custom functions
+# for generating seasonal forecasts of red-billed quelea distribution. This file
+# will be used to load functions into the main script
+# "Seasonal_Forecast_Quelea.R"
 # 
-#' extract_daily_temperature Extracts daily temperature from SEAS5 .nc file
+#' extract_daily_temperature Extracts daily temperature from SEAS5 nc file
 #' @param filepath path to nc file.
 #' @param forecast_start forecast initiation date.
 #' @param save_dir path to directory to save daily tifs to.
@@ -48,7 +49,6 @@ extract_daily_temperature <- function(filepath,
   
   
   # Iterate through each layer and calculate the mean for day
-  
   for (day in 1:((length(layer_numbers)-1))){
     
     print(paste(day,"/",daysintheforecast))
@@ -61,7 +61,6 @@ extract_daily_temperature <- function(filepath,
     ensembles <- vector("list", length = 51)
     
     # Iterate through each ensemble member to take the median for this day
-    
     for (ensemble_member in 1:51) {
       
       r <- subset(brick(filepath, level = ensemble_member), startlayer:endlayer)
@@ -95,7 +94,7 @@ extract_daily_temperature <- function(filepath,
 
 
 
-#' extract_daily_precipitation Extracts daily precipitation from SEAS5 .nc file
+#' extract_daily_precipitation Extracts daily precipitation from SEAS5 nc file
 #' @param filepath path to nc file.
 #' @param forecast_start forecast initiation date.
 #' @param save_dir path to directory to save daily tifs to.
@@ -123,7 +122,6 @@ extract_daily_precipitation <- function(filepath,
   # Create temporary directory to save intermediate precipitation files to.
   # Precipitation is aggregate from forecast initiation, so must be subtracted 
   # from day after to get daily value. 
-  
   processing_dir <- paste0(tempdir(),"/processing_prec")
   
   dir.create(processing_dir)
@@ -177,7 +175,6 @@ extract_daily_precipitation <- function(filepath,
   
   
   # Working backwards from final forecast date...
-  
   for (date in length(list):1){
     
     print(paste("Final processing: ",(length(list)-date)+1,"/",daysintheforecast))
@@ -240,7 +237,6 @@ extract_daily_precipitation <- function(filepath,
   
 }  
 
-
 #' resample_daily_weather Resample daily weather data to save spatial resolution
 #' and extent.
 #' @param daily_dir path to directory containing daily values for forecast and
@@ -248,7 +244,6 @@ extract_daily_precipitation <- function(filepath,
 #' @param spatial_resolution spatial resolution in degrees to resample weather
 #'   data to.
 #' @param spatial_extent sf polygon, the spatial extent to crop weather data to. 
-
 
 resample_daily_weather <- function(daily_dir,
                                    spatial_resolution,
@@ -396,8 +391,8 @@ extract_proc_var <- function(forecast_intervals,
 }
 
 
-#' get_evi_characterstics Extracts evi characterstics for vegetation growth
-#' stage classification using 16-day MODIS Evi values from past 52-weeks.
+#' get_evi_characterstics Extracts EVI characterstics for vegetation growth
+#' stage classification using 16-day MODIS EVI values from past 52-weeks.
 #' @param directory path to 16-day EVI rasters. 
 #' @param land_cover raster of land cover cells from MODIS Land Cover Yearly. 
 #' @param spatial_ext spatial polygon, the spatial extent to crop EVI data to. 
@@ -498,11 +493,10 @@ get_evi_characterstics <- function(directory,
 #' @param mean_lengths raster stack, the average lengths of each vegetation growth stage. 
 #' @param type one of; `cereal` or `grass`, the land cover cell type to project
 #'   seed availability for.
-#' @param model Random Forest classification model for vegetation growth stage based upon EVI characteristics. 
+#' @param model Random Forest model for classifying vegetation growth stages based upon EVI characteristics. 
 #' @param save_dir path to save seed availability projections to. 
 #' @param forecast_intitiation a character, the date that the seasonal forecast was initiated.  
 #' @param forecast_intervals a character vector, the date of each seasonal forecast interval. 
-
 
 
 project_seed_availability <- function(EVI_data_frame ,
@@ -614,17 +608,13 @@ project_seed_availability <- function(EVI_data_frame ,
     
   }
   
-  # Now we have for each cell, the days since the EVI characteristics were
-  # recorded, in which each vegetation growth stage likely began
-  
   colnames(stage_track)<-c("x","y","midgreenup","peak","midgreen","dorm")
   
   forecast_doys<-as.numeric(forecast_intervals - (forecast_intitiation-14))
   
 
-  # Iterate through each forecast interval, and if vegeation growth stage
+  # Iterate through each forecast interval, and if vegetation growth stage
   # between peak and dormancy, then seed inferred to be available.
-  
   for(int in 1:length(forecast_intervals)){
     
     date_1 <- forecast_intervals[int]
@@ -644,7 +634,7 @@ project_seed_availability <- function(EVI_data_frame ,
     moving.window.matrix[1:nrow(moving.window.matrix),
                          1:ncol(moving.window.matrix)] <- 1
     
-    # Calculate sum across moving.window.matrix for the raster
+    # Calculate sum across moving.window.matrix
     # This sums total available seed in surrounding radius. 
     rastero <- terra::focal(rastero,
                             moving.window.matrix,
