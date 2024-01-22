@@ -25,7 +25,7 @@ Before beginning the script, please ensure that all necessary packages have been
 [Google Earth Engine](https://developers.google.com/earth-engine/) and [Google Drive](https://www.google.co.uk/intl/en-GB/drive/) accounts. These are required for download 
 of seasonal forecast and historical datasets that are used to generate the seasonal forecasts.
 
-The final output of the script are seasonal forecasts of quelea distribution suitability in both `tif` and `png` format.
+The final outputs of the script are seasonal forecasts of quelea distribution suitability in both `tif` and `png` format.
 
 
 # Repository structure
