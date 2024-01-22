@@ -1,12 +1,8 @@
 # Seasonal forecasting of red-billed quelea distribution
 
-<!-- badges: start -->
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7405906.svg)](https://doi.org/10.5281/zenodo.7405906)
-<!-- badges: end -->
-
 # Summary
 
-In this repository, we provide code and data for generating seasonal forecasts of red-billed quelea distribution suitability up to seven months ahead. 
+In this repository, we provide code and data for generating seasonal forecasts of red-billed quelea (*Quelea* *quelea*) distribution suitability up to seven months ahead. 
 
 Our code is highly flexible. In this first step, you can specify the: 
  - `Spatial extent:` country or countries to forecast across (or your own custom
@@ -32,32 +28,30 @@ Once you have specified these details in the first step, the rest of the code
 
 Before beginning the script, please ensure that all necessary packages have been installed and that you have registered for free Climate Data Store,
 Google Earth Engine and Google Drive accounts. These are required for download 
-of forecast and historical data sets throughout the seasonal forecasting workflow.
+of seasonal forecast and historical data used to generate forecasts.
 
- Final output of this script are quelea distribution suitability forecasts
- for each interval within the seasonal forecast. This is exported in both tif
- format and png image of plotted suitability maps in ggplot2.
+The final output of this script are seasonal forecasts of quelea distribution suitability, exported in both `tif` and `png` format.
 
 
 # Repository structure
 
 ## `seasonal_forecasting_quelea`
 
-- **packages_to_install.txt** - list of packages required for generating seasonal forecasts - you do not need to open or edit this file;
+- `packages_to_install.txt` - list of packages required for generating seasonal forecasts - you do not need to open or edit this file;
 
-- **Functions_For_Forecast.R** - custom functions for generating forecasts - you do not need to open or edit this code;
+- `Functions_For_Forecast.R` - custom functions for generating forecasts - you do not need to open or edit this code;
 
-- **Seasonal_Forecast_Quelea.R** - This script includes the code for every step in generating seasonal forecasts of red-billed quelea distribution suitability. You will need to open and run this script. 
+- `Seasonal_Forecast_Quelea.R` - This script includes the code for every step in generating seasonal forecasts of red-billed quelea distribution suitability. You will need to open and run this script. 
 
 
-## `seasonal_forecasting_quelea/Data`
+## `/Data`
 
 - `breeding_distribution_quelea.csv` - filtered breeding season occurrence records for Quelea quelea lathamii in southern Africa with associated dynamic explanatory variables; 
 
 - `nonbreeding_distribution_quelea.csv` - filtered non-breeding season occurrence records for Quelea quelea lathamii in southern Africa with associated dynamic explanatory variables. 
 
 
-## `seasonal_forecasting_quelea/Data/average_length_phenology`
+## `/Data/average_length_phenology`
 
 - `Greenup_mean.tif` - average duration (number of days) of the vegetation stage "green-up" extracted from MODIS Land Cover Dynamics Yearly dataset;
 
@@ -72,7 +66,7 @@ of forecast and historical data sets throughout the seasonal forecasting workflo
 FRIEDL, M., GRAY, J. & SULLA-MENASHE, D. 2019. MCD12Q2 MODIS/Terra+Aqua Land Cover Dynamics Yearly L3 Global 500m SIN Grid V006 [MCD12Q2].
 
 
-## `seasonal_forecasting_quelea/Data/models`
+## `/Data/models`
 
 - `classification_model_cereal.rds` - Random Forest classification model for projecting vegetation growth stages in cereal croplands land cover cells (Friedl and Sulla-Menashe, 2019) based upon remote-sensed enhanced vegetation index (EVI) characteristics extracted from Didan (2021);
 
@@ -83,7 +77,7 @@ DIDAN, K. 2021. MODIS/Terra Vegetation Indices 16-Day L3 Global 250m SIN Grid V0
 FRIEDL, M. & SULLA-MENASHE, D. 2019. MCD12Q1 MODIS/Terra+ Aqua Land Cover Type Yearly L3 Global 500m SIN Grid V006 [MCD12Q1].
 
 
-# Seasonal Forecasting help
+# Help with Seasonal Forecasting 
 
 If you encounter an error or bug when generating seasonal forecasts using our code and data, please post a comment
 [here](https://github.com/r-a-dobson/seasonal-forecasting-quelea/issues) for guidance and
