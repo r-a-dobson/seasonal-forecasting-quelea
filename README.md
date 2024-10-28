@@ -22,15 +22,15 @@ The final outputs of the script are seasonal hindcasts of quelea distribution su
 
 ## `seasonal_forecasting_quelea`
 
-- `packages_to_install.txt` - list of packages required for generating seasonal forecasts - you do not need to open or edit this file;
+- `packages_to_install.txt` - list of packages required for generating near-term hindcasts- you do not need to open or edit this file;
 
-- `Functions_For_Forecast.R` - custom functions for generating seasonal forecasts - you do not need to open or edit this code;
+- `Functions_For_Forecast.R` - custom functions for generating near-term hindcasts - you do not need to open or edit this code;
 
 - `S1_Forecast_Weather_Variables.R` - the code for generating near-term hindcasts of 8- and 52-week weather variables. You will need to open and run this script. 
 
 - `S2_Forecast_Resource_Variables.R` - the code for generating near-term hindcasts of resource variables. You will need to open and run this script. 
 
-- `S3_Fit_Models.R` - the code for generating dynamic species distribution models for forecasting red-billed quelea distribution suitability. You will need to open and run this script. 
+- `S3_Fit_Models.R` - the code for generating dynamic species distribution models for projecting red-billed quelea distribution suitability. You will need to open and run this script. 
 
 - `S4_Project_Models.R` - the code projecting near-term distribution suitability for quelea using hindcast weather and resource variables. You will need to open and run this script. 
 
