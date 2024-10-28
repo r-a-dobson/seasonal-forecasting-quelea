@@ -10,6 +10,15 @@
 #------------------------------------------------------------------------------
 GEE_email <- "" # Set the email address registered with your GEE account
 
+# Provide path to "seasonal_forecasting_quelea" directory downloaded from GitHub
+directory <- "C:/Users/XXXXX/Downloads/seasonal_forecasting_quelea/"
+
+# Set this directory as your working directory for analyses
+setwd(directory)
+
+# Read in the custom functions written for seasonal forecasting
+source(paste0(directory, "/", "Functions_For_Forecast.R"))
+
 library(dynamicSDM)
 library(googledrive)
 library(rgee)

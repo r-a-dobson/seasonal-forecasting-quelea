@@ -11,6 +11,9 @@ directory <- "C:/Users/XXXXX/Downloads/seasonal_forecasting_quelea/"
 # Set this directory as your working directory for analyses
 setwd(directory)
 
+# Read in the custom functions written for seasonal forecasting
+source(paste0(directory, "/", "Functions_For_Forecast.R"))
+
 #------------------------------------------------------------------------------
 # Step 1: Extract dynamic weather variables for occurrence records
 #------------------------------------------------------------------------------

@@ -1,20 +1,12 @@
 ################################################################################
 #                                                                              #
-# Functions for generating seasonal forecasts for the red-billed quelea (Quelea#
-# quelea)                                                                      # 
-#                                                                              #
-# Code for: Seasonal forecasting of mobile species distributions               #
-# for dynamic management under extreme weather events.                         #
-#                                                                              #
-# Rachel Dobson, Stephen G. Willis, Stewart Jennings, Robert A. Cheke,         #
-# Andrew J. Challinor and Martin Dallimer                                      #
+# Functions for generating near-term hindcasts of distribution suitability     #
 #                                                                              #
 ################################################################################
 #
-# This script does not need to be opened or edited. It contains custom functions
-# for generating seasonal forecasts of red-billed quelea distribution. This file
-# will be used to load functions into the main script
-# "Seasonal_Forecast_Quelea.R"
+# This script does not need to be opened or edited. It contains custom functions. This file
+# will be used to load functions into the main R scripts.
+
 
 #' get_evi_characterstics Extracts EVI characterstics for vegetation growth
 #' stage classification using 16-day MODIS EVI values from past 52-weeks.
@@ -274,10 +266,9 @@ project_seed_availability <- function(EVI_data_frame ,
   
 }
 
+#' generate_dates Generate next 7 monthly dates for hindcast data
+#' @param start_date hindcast initiation date
 
-
-
-# Function to generate next 7 dates, one month apart
 generate_dates <- function(start_date) {
   
   # Convert the input to a Date object
@@ -290,25 +281,32 @@ generate_dates <- function(start_date) {
   return(as.Date(subsequent_dates)) # Exclude the starting date
 }
 
-# Function to generate next 7 dates, one month apart
+#' generate_dates_past Generate monthly dates across past year for historical
+#' data
+#' @param start_date hindcast initiation date
+
 generate_dates_past <- function(start_date) {
   
   # Convert the input to a Date object
   start_date <- as.Date(start_date)
-  year_date <- start_date -years(1)
-  # Create a vector of 7 subsequent months
-  subsequent_dates <- seq(from = year_date, by = "month", length.out = 12)
+  
+  year_date <- start_date - years(1) # Get date of one year prior
+  
+  subsequent_dates <- seq(from = year_date, by = "month", length.out = 12) # Generate 12 monthly dates
   
   # Format the dates and return them
-  
   return(as.Date(subsequent_dates)) # Exclude the starting date
 }
 
+#' get_monthly_indices Get starting index for specific month and year in raster stack of hindcast data
+#' @param year hindcast year to get indices for
+#' @param month hindcast month to get indices for
+#' @param start_year starting year in raster stack
+#' @param end_year final year in raster stack 
 
-# Function to get indices for a specific month and year in a raster stack
 get_monthly_indices <- function(year, month, start_year = 2002, end_year = 2016) {
   
-  duration <- (end_year - start_year)+2
+  duration <- (end_year - start_year) + 2
   
   daysin <- as.numeric(lubridate::days_in_month(month))
   
@@ -325,9 +323,12 @@ get_monthly_indices <- function(year, month, start_year = 2002, end_year = 2016)
   return(c(start))
 }
 
+#' get_monthly_indices_end Get ending index for specific month and year in raster stack of hindcast data
+#' @param year hindcast year to get indices for
+#' @param month hindcast month to get indices for
+#' @param start_year starting year in raster stack
+#' @param end_year final year in raster stack 
 
-
-# Function to get indices for a specific month and year in a raster stack
 get_monthly_indices_end <- function(year, month, start_year = 2002, end_year = 2016) {
   
   duration <- (end_year - start_year)+2
@@ -347,9 +348,12 @@ get_monthly_indices_end <- function(year, month, start_year = 2002, end_year = 2
   return(c(end))
 }
 
+#' get_monthly_indices_past Get starting index for specific month and year in raster stack of historical data
+#' @param year hindcast year to get indices for
+#' @param month hindcast month to get indices for
+#' @param start_year starting year in raster stack
+#' @param end_year final year in raster stack 
 
-
-# Function to get indices for a specific month and year in a raster stack
 get_monthly_indices_past <- function(year, month, start_year = 2002, end_year = 2016) {
   
   duration <- (end_year - start_year)+2
@@ -369,7 +373,13 @@ get_monthly_indices_past <- function(year, month, start_year = 2002, end_year = 
   return(c(start))
 }
 
-# Function to get indices for a specific month and year in a raster stack
+
+#' get_monthly_indices_end_past Get ending index for specific month and year in raster stack of historical data
+#' @param year hindcast year to get indices for
+#' @param month hindcast month to get indices for
+#' @param start_year starting year in raster stack
+#' @param end_year final year in raster stack 
+ 
 get_monthly_indices_end_past <- function(year, month, start_year = 2002, end_year = 2016) {
   
   duration <- (end_year - start_year)+2
@@ -389,8 +399,10 @@ get_monthly_indices_end_past <- function(year, month, start_year = 2002, end_yea
   return(c(end))
 }
 
-
-
+#' get_details Get details on file names and indices for extracting hindcast data
+#' @param forecast_date hindcast initiation date
+#' @param ee SEAS5 ensemble member of interest
+#' @param bias_corrected_SEAS5 path to bias corrected SEAS5 data
 
 get_details <- function(forecast_date, ee, bias_corrected_SEAS5){
   
@@ -417,21 +429,25 @@ get_details <- function(forecast_date, ee, bias_corrected_SEAS5){
       end_indices = mapply(get_monthly_indices_end, year, month)
     )
   
-  data[data$year =="2017","start_indices"]<-1
-  
-  data[data$year =="2017","end_indices"]<-1+lubridate::days_in_month(data[data$year =="2017","month"])
-  
   return(data)
   
 }
 
+#' get_days_in_month Get number of days in given month
+#' @param year year of interest
+#' @param month month of interest
 
-# Function to get the number of days in the month
 get_days_in_month <- function(year, month) {
+  
   ymd(paste(year, month, "01", sep = "-")) %>% days_in_month()
+  
 }
 
-library(lubridate)
+#' get_details_past Get details on file names and indices for extracting
+#' historical data
+#' @param forecast_date hindcast initiation date
+#' @param bias_corrected_ERA5 path to bias corrected ERA5 data
+
 get_details_past <- function(forecast_date, bias_corrected_ERA5){
   
   next_dates <- generate_dates_past(forecast_date)
@@ -440,9 +456,9 @@ get_details_past <- function(forecast_date, bias_corrected_ERA5){
                           month = lubridate::month(next_dates),
                           year = lubridate::year(next_dates)  )
   
-  dataframe$filename_prec <-  paste0(bias_corrected_ERA5,"/total_precipitation_LT",0,"_EM",0,"_MN",sprintf("%002d",dataframe$month),"_.nc")
+  dataframe$filename_prec <-  paste0(bias_corrected_ERA5, "/total_precipitation_LT", 0, "_EM", 0, "_MN", sprintf("%002d",dataframe$month), "_.nc")
   
-  dataframe$filename_temp <- paste0(bias_corrected_ERA5, "/2m_temperature_LT",0,"_EM",0,"_MN",sprintf("%002d",dataframe$month),"_.nc")
+  dataframe$filename_temp <- paste0(bias_corrected_ERA5, "/2m_temperature_LT", 0, "_EM", 0, "_MN" ,sprintf("%002d",dataframe$month), "_.nc")
   
   # Applying the function to each row
   data <- dataframe %>%
@@ -457,27 +473,29 @@ get_details_past <- function(forecast_date, bias_corrected_ERA5){
   # Add a new column for the number of days in the month
   data$days_in_month <- mapply(get_days_in_month, data$year, data$month)
   
-  
   return(data)
   
 }
 
+#' process_nc_file Extracts and processes daily data from hindcast dataset
+#' @param filename name of file to extract data from
+#' @param start_idx start index for data extraction
+#' @param end_idx end index for data extraction
+#' @param start_date start date for month extracted
 
-
-
-library(terra)
-
-
-# Define a function to process each row of the DataFrame
-process_nc_file <- function(filename, start_idx, end_idx, start_date,obs,var) {
-  # Read the NetCDF file
-  filename2<- filename
+process_nc_file <- function(filename, start_idx, end_idx, start_date) {
+ 
+  filename2 <- filename
+  
   print(filename)
+  
   rast <- rast(filename2)
-  # terra::ext(rast) <- terra::ext(obs)
+
   # Extract the required layers based on start and end indices
   rast_subset <- rast[[as.numeric(start_idx):as.numeric(end_idx)]]
+  
   print(as.character(start_date))
+  
   # Parse the start date
   start_date <- as.Date(as.character(start_date))
   
@@ -485,34 +503,41 @@ process_nc_file <- function(filename, start_idx, end_idx, start_date,obs,var) {
   dates <- seq(start_date, by = "day", length.out = length(as.numeric(start_idx):as.numeric(end_idx)))
   
   # Save each layer as a separate TIFF file
+  
   for (i in seq_along(dates)) {
-    # Create a filename for each date
+
     date_str <- format(dates[i], "%Y%m%d")
     
     out_filename <- paste0(dates[i],"_SEAS5_", gsub(".nc", "",basename(filename2)), "_.tif")
-    out_filenamenc <- paste0(dates[i],"_SEAS5_", gsub(".nc", "",basename(filename2)), "_.nc")
-    # Write the single layer raster to a file
-    writeRaster(rast_subset[[i]], filename = out_filename,  overwrite=TRUE)
     
-    #terra::writeCDF(rast_subset[[i]], 
-    #            zname = "time",
-    #               varname = short_v,
-    #           file =out_filenamenc,
-    #           overwrite=T)
+    out_filenamenc <- paste0(dates[i],"_SEAS5_", gsub(".nc", "",basename(filename2)), "_.nc")
+  
+    writeRaster(rast_subset[[i]], filename = out_filename,  overwrite = TRUE)
+    
     
   }
 }
 
-process_nc_file_past <- function(filename, start_idx, end_idx, start_date,obs,var) {
+#' process_nc_file_past Extracts and processes daily data from historical dataset
+#' @param filename name of file to extract data from
+#' @param start_idx start index for data extraction
+#' @param end_idx end index for data extraction
+#' @param start_date start date for month extracted
+
+process_nc_file_past <- function(filename, start_idx, end_idx, start_date) {
+ 
   # Read the NetCDF file
   filename2<- as.character(filename)
+  
   print(filename)
+  
   rast <- rast(filename2)
-  # terra::ext(rast) <- terra::ext(obs)
+  
   # Extract the required layers based on start and end indices
   rast_subset <- rast[[as.numeric(start_idx):as.numeric(end_idx)]]
   print(start_date)
   print(as.character(start_date))
+  
   # Parse the start date
   start_date <- as.Date(as.character(start_date))
   
@@ -520,9 +545,9 @@ process_nc_file_past <- function(filename, start_idx, end_idx, start_date,obs,va
   dates <- seq(start_date, by = "day", length.out = length(as.numeric(start_idx):as.numeric(end_idx)))
   
   # Save each layer as a separate TIFF file
+  
   for (i in seq_along(dates)) {
-    # Create a filename for each date
-    
+
     date_str <- format(dates[i], "%Y%m%d")
     
     out_filename <- paste0(dates[i],"_ERA5_", gsub(".nc", "",basename(filename2)), "_.tif")
@@ -536,19 +561,24 @@ process_nc_file_past <- function(filename, start_idx, end_idx, start_date,obs,va
   }
 }
 
+#' extract_chelsa Extracts and processes 8- and 52-week weather variables from
+#' historical CHELSA W5E5 data for occurrence records
+#' @param dataset occurrence record dataset with x and y columns
+#' @param precipitation_dir directory containing daily precipitation nc files
+#' @param temperature_dir  directory containing daily temperature nc files
 
-
-
-
-extract_chelsa <- function(dataset, precipitation_dir, temperature_dir, output_dir ){
+extract_chelsa <- function(dataset, precipitation_dir, temperature_dir){
   
+  # Get list of all file names
   precipitation_files <- list.files(precipitation_dir, pattern = "nc", full.names=T)
   
   temperature_files <- list.files(temperature_dir, pattern = "nc", full.names=T)
   
-  dataset <- dataset[dataset$year <2017,] # CHELSA temporal extent
+  # Filter out records beyond CHELSA-W5E5 extent
+  dataset <- dataset[dataset$year <2017,] 
   
-  month_year_combos <- paste0(dataset$year, sprintf("%02d", dataset$month)) #Get unique dates
+  # Get unique dates to extract for 
+  month_year_combos <- paste0(dataset$year, sprintf("%02d", dataset$month)) 
   
   dataset$month_year_combo <- month_year_combos
   
@@ -576,8 +606,7 @@ extract_chelsa <- function(dataset, precipitation_dir, temperature_dir, output_d
     
     days <- unique(split_dataset$day)
     
-    
-    for (d in 1:length(days)) {    # for every unique day in month/year combination
+    for (d in 1:length(days)) { # for every unique day in month/year combination
       
       split_dataset_further <- split_dataset[split_dataset$day == days[d],]
       
@@ -640,5 +669,3 @@ extract_chelsa <- function(dataset, precipitation_dir, temperature_dir, output_d
   return(all_together_combined)
   
 }
-
-

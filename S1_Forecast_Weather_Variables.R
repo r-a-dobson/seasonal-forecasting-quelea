@@ -29,6 +29,10 @@ library(lubridate)
 library(rnaturalearth)
 library(terra)
 
+# Read in the custom functions written for seasonal forecasting
+source(paste0(directory, "/", "Functions_For_Forecast.R"))
+
+
 # Before running this script, please ensure that all necessary packages have been
 # installed and that you have registered for free accounts on:
 # > Climate Data Store (https://cds.climate.copernicus.eu/)
