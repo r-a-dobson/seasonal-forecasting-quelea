@@ -1,4 +1,4 @@
-# Seasonal forecasting of red-billed quelea distribution
+# Near-term forecasting of red-billed quelea distribution
 
 # Summary
 
