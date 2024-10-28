@@ -16,3 +16,14 @@ readr
 pROC
 png
 ggplot2
+parallel
+loadeR
+loadeR.java
+climate4R.UDG
+climate4R.datasets
+transformeR
+downscaleR
+visualizeR
+rJava
+reticulate
+loadeR.2nc

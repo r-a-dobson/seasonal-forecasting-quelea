@@ -2,31 +2,21 @@
 
 # Summary
 
-In this repository, we provide code and data for generating seasonal forecasts of red-billed quelea (*Quelea* *quelea*) distribution suitability up to seven months ahead. 
+In this repository, we provide code and data for generating near-term hindcasts of red-billed quelea (*Quelea* *quelea*) distribution suitability up to seven months ahead. 
 
-Our code is highly flexible, you can specify the: 
- - `Spatial extent:` country or countries to generate seasonal forecasts across (or provide your own custom
+Our code is flexible, you can specify the: 
+ - `Spatial extent:` country or countries to generate seasonal hindcasts across (or provide your own custom
 `sf` polygon). Please note all species distribution models (SDMs) are trained on *Quelea quelea lathamii*
  records from southern Africa.
 
 - `Spatial resolution:` given in degrees, this value specifies the spatial
  resolution for the output seasonal forecasts.
 
-- `Temporal extent:` the month and year to initiate the seasonal forecast. European Centre for Medium-Range Weather Forecasts (ECMWF)
- SEAS5 forecasts have an initial date of the 1st of each month, and run to 7
- months ahead. These data are released on the 5th of each month. We recommend
- choosing the closest available date to real-time.
-
- - `Temporal resolution:` the intervals to generate seasonal forecasts at between
- zero and seven months ahead of the initiation date. This can range from daily
- to weekly to monthly intervals depending on your needs.
-
 Before beginning the script, please ensure that all necessary packages have been installed and that you have registered for free [Climate Data Store](https://cds.climate.copernicus.eu/#!/home),
 [Google Earth Engine](https://developers.google.com/earth-engine/) and [Google Drive](https://www.google.co.uk/intl/en-GB/drive/) accounts. These are required for download 
 of seasonal forecast and historical datasets that are used to generate the seasonal forecasts.
 
-The final outputs of the script are seasonal forecasts of quelea distribution suitability in both `tif` and `png` format.
-
+The final outputs of the script are seasonal hindcasts of quelea distribution suitability in `tif` format.
 
 # Repository structure
 
@@ -36,14 +26,20 @@ The final outputs of the script are seasonal forecasts of quelea distribution su
 
 - `Functions_For_Forecast.R` - custom functions for generating seasonal forecasts - you do not need to open or edit this code;
 
-- `Seasonal_Forecast_Quelea.R` - the code for every step in generating seasonal forecasts of red-billed quelea distribution. You will need to open and run this script. 
+- `S1_Forecast_Weather_Variables.R` - the code for generating near-term hindcasts of 8- and 52-week weather variables. You will need to open and run this script. 
+
+- `S2_Forecast_Resource_Variables.R` - the code for generating near-term hindcasts of resource variables. You will need to open and run this script. 
+
+- `S3_Fit_Models.R` - the code for generating dynamic species distribution models for forecasting red-billed quelea distribution suitability. You will need to open and run this script. 
+
+- `S4_Project_Models.R` - the code projecting near-term distribution suitability for quelea using hindcast weather and resource variables. You will need to open and run this script. 
 
 
 ## `/Data`
 
-- `breeding_distribution_quelea.csv` - filtered breeding season occurrence records for *Quelea* *quelea* *lathamii* in southern Africa with associated dynamic explanatory variables; 
+- `breeding_distribution_quelea.csv` - filtered breeding season occurrence records for *Quelea* *quelea* *lathamii* in southern Africa; 
 
-- `nonbreeding_distribution_quelea.csv` - filtered non-breeding season occurrence records for *Quelea* *quelea* *lathamii* in southern Africa with associated dynamic explanatory variables. 
+- `nonbreeding_distribution_quelea.csv` - filtered non-breeding season occurrence records for *Quelea* *quelea* *lathamii* in southern Africa.
 
 
 ## `/Data/average_length_phenology`
