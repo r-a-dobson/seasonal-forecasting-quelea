@@ -1,12 +1,13 @@
 #-------------------------------------------------------------------------------
-# (1) Code for processing near-term forecasts of weather variables
+# (1) Code for processing near-term hindcasts of weather variables
 #------------------------------------------------------------------------------
 
 # Please ensure that you have downloaded the GitHub repository that contains the
 # associated data sets and custom functions.
-
+# Found at: https://github.com/r-a-dobson/seasonal-forecasting-quelea
+#
 #------------------------------------------------------------------------------
-# Step 1: Set up and seasonal forecast specification
+# Step 1: Set up working directory and load packages
 #------------------------------------------------------------------------------
 
 # Provide path to "seasonal_forecasting_quelea" directory downloaded from GitHub
@@ -16,29 +17,32 @@ directory <- "C:/Users/XXXXX/Downloads/seasonal_forecasting_quelea/"
 setwd(directory)
 
 # Install packages required for this analysis
-
 packages_to_install <- readLines("packages_to_install.txt")
-
 install.packages(packages_to_install)
 
-# If any packages fail to install, try installing from GitHub 
+# If any packages installs fail, try installing directly from GitHub 
 # install_github("SantanderMetGroup/downscaleR") # https://github.com/SantanderMetGroup/downscaleR
 
+# Load required packages for this R script
 library(dynamicSDM)
 library(lubridate)
 library(rnaturalearth)
 library(terra)
 
-# Read in the custom functions written for seasonal forecasting
+# Read in the custom functions  for near-term forecasting
 source(paste0(directory, "/", "Functions_For_Forecast.R"))
 
-
-# Before running this script, please ensure that all necessary packages have been
+# Before running this script, please ensure that all required packages have been
 # installed and that you have registered for free accounts on:
 # > Climate Data Store (https://cds.climate.copernicus.eu/)
 # > Google Earth Engine (https://earthengine.google.com/)
 # > Google Drive  (https://workspace.google.com/intl/en_uk/products/drive/). 
-# These are required for download of forecast and historical data sets.
+# These are used to download hindcast and historical datasets.
+
+
+#------------------------------------------------------------------------------
+# Step 2: Set spatial extent and resolution for near-term hindcasts
+#------------------------------------------------------------------------------
 
 # Set the spatial extent and resolution for near-term distribution forecasting
 # -	Spatial extent: country or countries to forecast across (or your own custom
@@ -70,18 +74,18 @@ spatial_extent_sp <-ne_countries(country = countries_of_interest,
 # Spatial resolution for forecasts in degrees
 spatial_resolution <- 0.05
 
+#------------------------------------------------------------------------------
+# Step 3: Download SEAS5 Seasonal Forecast precipitation and temperature data
+#------------------------------------------------------------------------------
 
-#------------------------------------------------------------------------------
-# Step 2: Download SEAS5 Seasonal Forecast precipitation and temperature data
-#------------------------------------------------------------------------------
-#See seasonal forecast data information at:
+#See details on seasonal forecast data at:
 #https://www.ecmwf.int/en/newsletter/154/meteorology/ecmwfs-new-long-range-forecasting-system-seas5
 
 library(ecmwfr)
 library(keyring)
 library(raster)
 
-#  Climate Data Store account and  log-in details
+# Input your Climate Data Store account and log-in details
 user_number <- "XXXXX" # Replace with your details
 user_key <- "XXXXX" 
 wf_set_key(user = user_number, key = user_key, service = "cds")
@@ -92,7 +96,6 @@ forecast_extent <- c(terra::ymax(terra::vect(spatial_extent)),
                      terra::ymin(terra::vect(spatial_extent)),
                      terra::xmax(terra::vect(spatial_extent)))
 
-
 # Temporal extent to extract (training and testing period for bias correction) 
 
 forecast_years <- 1982:2016
@@ -101,13 +104,12 @@ forecast_months <- 1:12
 
 all_to_download <- expand.grid(forecast_years, forecast_months)
 
-# Create directories to store SEAS5 hindcasts
+# Create directories to store SEAS5 hindcasts in
 save_dir_tas_SEAS5 <- paste0(directory, "Data/SEAS5_TAS")
 dir.create(save_dir_tas_SEAS5, recursive = T)
 
 save_dir_pr_SEAS5 <- paste0(directory, "Data/SEAS5_PR")
 dir.create(save_dir_pr_SEAS5, recursive = T)
-
 
 # Iterate through each file required and download from CDS.
 
@@ -190,12 +192,12 @@ ncfile <- wf_request(user = user_number,
 
 
 #------------------------------------------------------------------------------
-# Step 3: Extract daily data from near-term seasonal hindcasts
+# Step 4: Extract daily data from near-term seasonal hindcasts
 #------------------------------------------------------------------------------
 
-#----------------------------
-# Process 2m temperature 
-#----------------------------
+#----------------------------------
+# Process hindcast temperature data
+#---------------------------------
 
 seasonal_forecasts <- save_dir_tas_SEAS5
 
@@ -203,7 +205,7 @@ forecast_files <- list.files(seasonal_forecasts, full.name =T, pattern=".nc")
 
 forecast_files <- forecast_files[grepl("temperature", forecast_files)]
 
-# Create save directory for processed hindcast data
+# Create directory to store processed hindcast data
 save_dir_tas_SEAS5_processed <- paste0(save_dir_tas_SEAS5, "/SEAS5_PROCCESSED")
 dir.create(save_dir_tas_SEAS5_processed)
 
@@ -281,16 +283,17 @@ for(ens in 1:25){ # For each ensemble member (N = 25)
   }
 }
 
-#----------------------------
-# Process total precipitation
-#----------------------------
+#--------------------------------------
+# Process hindcast  precipitation data
+#--------------------------------------
+
 seasonal_forecasts <- save_dir_pr_SEAS5
 
 forecast_files <- list.files(seasonal_forecasts, full.name = T, pattern = ".nc")
 
 forecast_files <-forecast_files[grepl("precipitation",forecast_files)]
 
-# Create save directory for processed SEAS5 hindcast data
+# Create directory to store processed hindcast data
 save_dir_pr_SEAS5_processed <- paste0(save_dir_pr_SEAS5, "/SEAS5_PROCCESSED")
 dir.create(save_dir_pr_SEAS5_processed)
 
@@ -298,16 +301,16 @@ for(ens in 1:25){ # For each ensemble member (N = 25)
  
   ensemble_member <- ens
   
-  for(x in 1:length(forecast_files)){ # For every SEAS5 hindcast
+  for(x in 1:length(forecast_files)){ # For every SEAS5 hindcast downlaoded
     
     forecast_data <- terra::rast(forecast_files[x])
-    uni_dates<-unique(terra::time(forecast_data,format="days"))
+    uni_dates<-unique(terra::time(forecast_data, format = "days"))
     
     sequence <- seq(1, nlyr(forecast_data), by = 25) + (ensemble_member -1)
     
     forecast_data<-forecast_data[[sequence]]
     
-    forecast_data <- app(forecast_data, fun = function(x) { c(x[1], diff(x))  }) # As pr is accumulated, calculate the difference
+    forecast_data <- app(forecast_data, fun = function(x) { c(x[1], diff(x))  }) # pr is accumulated, so calculate the difference
     
     time(forecast_data) <- uni_dates
     
@@ -372,17 +375,17 @@ for(ens in 1:25){ # For each ensemble member (N = 25)
 
 
 #------------------------------------------------------------------------------
-# Step 4: Bias correction of seasonal hindcasts  
+# Step 5: Bias correction of seasonal hindcasts  
 #------------------------------------------------------------------------------
-# Bias correction is split by variable, lead-time, month, and ensemble member
+# Bias correction is split by variable, lead-time, month, and ensemble member.
 
-# First, you need to download CHELSA-W5E5 daily temperature and preciptiation
+# First, you need to download CHELSA-W5E5 daily temperature and precipitation
 # data for 1982-2016 from:
 # https://chelsa-climate.org/chelsa-w5e5-v1-0-daily-climate-data-at-1km-resolution/
 
-precipitation_dir <- "" # Insert path to CHELSA-W5E5 precipitation files 
+precipitation_dir <- "XXX" # Replace with path to CHELSA-W5E5 precipitation files 
 
-temperature_dir <- "" # Insert path to CHELSA-W5E5 temperature files
+temperature_dir <- "XXX" # Replace with path to CHELSA-W5E5 temperature files
 
 # Load packages for bias correction using the DownscaleR package 
 options(java.parameters = "-Xmx10g")
@@ -422,8 +425,7 @@ test_years <- c(2002:2016)
 combinations <- expand.grid(variables, LTS, MNS, EMS)
 
 # Iterate through each variable, lead-time, month and ensemble member
-
-for (x in starty:nrow(combinations)) {
+for (x in 1:nrow(combinations)) {
   
   print(paste(x, " of ", nrow(combinations)))
   
@@ -447,7 +449,6 @@ for (x in starty:nrow(combinations)) {
       
       makeAggregatedDataset(source.dir = director,
                             ncml.file = paste0(x,"combined_data.ncml"))
-      
       short_v <- "pr"
       short_vera <- "tp"
       UNIT1 <- "MM"
@@ -459,7 +460,6 @@ for (x in starty:nrow(combinations)) {
       
       makeAggregatedDataset(source.dir = director,
                             ncml.file = paste0(x,"combined_data.ncml"))
-      
       short_v <- "tas"
       short_vera <- "t2m"
       UNIT1 <- "K"
@@ -473,10 +473,10 @@ for (x in starty:nrow(combinations)) {
     
     
     ###############################
-    # Read in the CHELSA-W5E5 data 
+    # Load the CHELSA-W5E5 data 
     ################################
     
-    print("reading in CHELSA-W5E5")
+    print("Loading CHELSA-W5E5")
     
     if(VAR1 == "total_precipitation"){
       
@@ -508,8 +508,7 @@ for (x in starty:nrow(combinations)) {
     tp_daily <- interpGrid(tp_daily, new.coordinates = new.coordinates,
                  method = "bilinear")
     
-    
-    # Bias correction
+    # Run bias correction
     if(VAR1 == "total_precipitation"){
       bc_data <- biasCorrection(y = tp_daily, x = training_grid, newdata = testing_grid, method = "eqm", precip=T,cross.val = "none")
     }
@@ -554,7 +553,7 @@ for (x in starty:nrow(combinations)) {
 }
 
 #------------------------------------------------------------------------------
-# Step 5: Download ERA5 precipitation and temperature data 
+# Step 6: Download ERA5 precipitation and temperature data 
 #------------------------------------------------------------------------------
 
 # Download ERA5 re-analysis data from the CDS. For information on the dataset see:
@@ -657,7 +656,7 @@ for (c in 1:nrow(combinations)){
 
 
 #------------------------------------------------------------------------------
-# Step 6: Bias correction of ERA5 data 
+# Step 7: Bias correction of ERA5 data 
 #------------------------------------------------------------------------------
 
 output_directory <- paste0(directory, "/Data/ERA5_BC/")
@@ -694,7 +693,6 @@ for (x in 1:nrow(combinations)) {
   EMS1 <- 0
   
   if(!file.exists(paste0(output_directory, VAR1, "_LT", LTS1, "_EM", EMS1, "_MN", MNS1, "_.nc"))) {
-    
     
     if (VAR1 == "total_precipitation") {
       short_v <- "pr"
@@ -753,12 +751,11 @@ for (x in 1:nrow(combinations)) {
       
     }
     
-    
     ###############################
-    # Read in CHELSA-W5E5 data 
+    # Load CHELSA-W5E5 data 
     ################################
     
-    print("readingin chelsa")
+    print("Loading CHELSA-W5E5 data")
     
     if(VAR1 == "total_precipitation"){
       historical_grid <- loadGridData("historical_CHELSA_pr.ncml", var = short_v, years = train_years, season = combinations$Var3[x])
@@ -794,8 +791,6 @@ for (x in 1:nrow(combinations)) {
     
     bc_data_proc <- terra::rast(bc_data_proc)
     
-    
-    
     # Extent sort
     
     get_grid <- terra::rast(list.files(reanalysis_directory, full.names = T)[1])
@@ -825,11 +820,8 @@ for (x in 1:nrow(combinations)) {
   }
 }
 
-
-
-
 #------------------------------------------------------------------------------
-# Step 7: Combine ERA5 and SEAS5 for weather variable hindcasts
+# Step 8: Combine ERA5 and SEAS5 to generate weather variable hindcasts
 #------------------------------------------------------------------------------
 
 # Load required packages
@@ -861,7 +853,9 @@ dataframe <- dataframe[order(dataframe$year), ]
 
 dataframe$date <- as.Date(with(dataframe, paste(year, month, day, sep = "-")), "%Y-%m-%d")
 
+#---------------------------------------------------------------
 # Create data frame of relevant dates for near-term hindcasting
+#---------------------------------------------------------------
 dataframe$forecastdate_1 <- as.Date(with(dataframe, paste(year, month, day, sep = "-")), "%Y-%m-%d") %m+% months(1)
 dataframe$forecastdate_2 <- as.Date(with(dataframe, paste(year, month, day, sep = "-")), "%Y-%m-%d") %m+% months(2)
 dataframe$forecastdate_3 <- as.Date(with(dataframe, paste(year, month, day, sep = "-")), "%Y-%m-%d") %m+% months(3)
@@ -874,26 +868,13 @@ dataframe$minus_month_one   <- as.Date(with(dataframe, paste(year, month, day, s
 dataframe$minus_month_two   <- as.Date(with(dataframe, paste(year, month, day, sep = "-")), "%Y-%m-%d") %m-% months(2)
 dataframe$minus_month_three <- as.Date(with(dataframe, paste(year, month, day, sep = "-")), "%Y-%m-%d") %m-% months(3)
 
-#### Historical data period
+# Historical data period
 dataframe$historical_time_start <- as.Date(with(dataframe, paste(year, month, day, sep = "-")), "%Y-%m-%d") - 365
 dataframe$historical_time_end <- as.Date(with(dataframe, paste(year, month, day, sep = "-")), "%Y-%m-%d") %m-% months(3) -  1
 
-#### Resource variable columns
-dataframe$landcoveryear<- dataframe$year-2
-
-dataframe$date_for_current_seed <- as.Date(with(dataframe, paste(year, 7, day, sep = "-")), "%Y-%m-%d") 
-dataframe$forecastdate_7 <- as.Date(with(dataframe, paste(year, month, day, sep = "-")), "%Y-%m-%d") %m+% months(7)
-dataframe$monthsincludecurrentseed <- interval(dataframe$date_for_current_seed, dataframe$forecastdate_6) %/% months(1) 
-
-dataframe$date_for_prev_seed <- as.Date(with(dataframe, paste(year - 1, 7, day, sep = "-")), "%Y-%m-%d") 
-dataframe$forecastdate_7 <- as.Date(with(dataframe, paste(year, month, day, sep = "-")), "%Y-%m-%d") %m+% months(7)
-dataframe$monthsincludeprevseed <- interval(dataframe$date_for_prev_seed, dataframe$forecastdate_6) %/% months(1) 
-
-dataframe$forecastseedprev_first <- as.Date(with(dataframe, paste(year - 1, 7, day, sep = "-")),  "%Y-%m-%d") 
-dataframe$forecastseedprev_second <- as.Date(with(dataframe, paste(year, 7, day, sep = "-")),  "%Y-%m-%d") 
-
 Forecasting_Dates <- as.data.frame(dataframe)
 
+# Specify directories containing bias corrected SEAS5 and ERA5 data
 bias_corrected_ERA5 <- paste0(directory, "/Data/ERA5_BC/")
 
 bias_corrected_SEAS5 <- paste0(directory, "/Data/SF_BC/")
@@ -1150,8 +1131,4 @@ for (f in 1:nrow(Forecasting_Dates)) {
           }
         }
       }
-}
-
-# At the end of this script, in your directory you should have a folder for each
-# hindcast date, containing the ensemble medians for each weather variable for
-# each 2-week interval
+  }

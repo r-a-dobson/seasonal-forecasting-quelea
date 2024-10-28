@@ -226,7 +226,6 @@ project_seed_availability <- function(EVI_data_frame ,
   
   forecast_doys<-as.numeric(forecast_intervals - (forecast_intitiation-14))
   
-
   # Iterate through each forecast interval, and if vegetation growth stage
   # between peak and dormancy, then seed inferred to be available.
   for(int in 1:length(forecast_intervals)){
@@ -260,10 +259,7 @@ project_seed_availability <- function(EVI_data_frame ,
       file = paste0(save_dir, "/", date_1, "_", type, "_seed.tif"),
       overwrite = T
     )
-    
   }
-  
-  
 }
 
 #' generate_dates Generate next 7 monthly dates for hindcast data
@@ -415,9 +411,9 @@ get_details <- function(forecast_date, ee, bias_corrected_SEAS5){
   dataframe$LT <- rep(1:7)
   dataframe$EM <- rep(ee, nrow(dataframe))
   
-  dataframe$filename_prec <- paste0(bias_corrected_SEAS5,"/total_precipitation_LT",dataframe$LT,"_EM",dataframe$EM,"_MN",sprintf("%002d",dataframe$month), "_.nc")
+  dataframe$filename_prec <- paste0(bias_corrected_SEAS5,"/total_precipitation_LT",dataframe$LT, "_EM", dataframe$EM, "_MN", sprintf("%002d", dataframe$month), "_.nc")
   
-  dataframe$filename_temp <- paste0(bias_corrected_SEAS5,"/2m_temperature_LT",dataframe$LT,"_EM",dataframe$EM,"_MN",sprintf("%002d",dataframe$month), "_.nc")
+  dataframe$filename_temp <- paste0(bias_corrected_SEAS5, "/2m_temperature_LT", dataframe$LT, "_EM", dataframe$EM, "_MN", sprintf("%002d",dataframe$month), "_.nc")
   
   # Applying the function to each row
   data <- dataframe %>%
@@ -662,10 +658,6 @@ extract_chelsa <- function(dataset, precipitation_dir, temperature_dir){
       all_together_combined <- rbind(all_together_combined, all_together)
       
     }
-    
-    
   }
-  
   return(all_together_combined)
-  
 }
