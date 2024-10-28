@@ -29,7 +29,7 @@ library(lubridate)
 library(rnaturalearth)
 library(terra)
 
-# Read in the custom functions  for near-term forecasting
+# Read in the custom functions for near-term hindcasting
 source(paste0(directory, "/", "Functions_For_Forecast.R"))
 
 # Before running this script, please ensure that all required packages have been

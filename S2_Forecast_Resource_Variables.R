@@ -4,21 +4,24 @@
 
 # Please ensure that you have downloaded the GitHub repository that contains the
 # associated data sets and custom functions.
+# Found at: https://github.com/r-a-dobson/seasonal-forecasting-quelea
 
 #------------------------------------------------------------------------------
 # Step 1: Set up and initiate Google Earth Engine and Google Drive
 #------------------------------------------------------------------------------
+
 GEE_email <- "" # Set the email address registered with your GEE account
 
 # Provide path to "seasonal_forecasting_quelea" directory downloaded from GitHub
 directory <- "C:/Users/XXXXX/Downloads/seasonal_forecasting_quelea/"
 
-# Set this directory as your working directory for analyses
+# Set this as your working directory
 setwd(directory)
 
-# Read in the custom functions written for seasonal forecasting
+# Read in the custom functions for near-term hindcasting
 source(paste0(directory, "/", "Functions_For_Forecast.R"))
 
+# Load required packages
 library(dynamicSDM)
 library(googledrive)
 library(rgee)
@@ -26,6 +29,7 @@ library(stars)
 library(lubridate)
 library(googledrive)
 
+# Authenticate and initialise Google Earth Engine
 rgee::ee_Authenticate(user = GEE_email, drive=T)
 rgee::ee_check()
 rgee::ee_check_credentials()
@@ -34,11 +38,13 @@ rgee::ee_Initialize()
 googledrive::drive_auth()
 googledrive::drive_user()
 
-years<-c(2004:2016)
+# Create data frame to iterate through each monthly near-term hindcast date
 
-months<-c(1:12)
+years <- c(2004:2016)
 
-days<-c(1)
+months <- c(1:12)
+
+days <- c(1)
 
 dataframe <- as.data.frame(expand.grid(years, months, days))
 
@@ -64,6 +70,7 @@ dates <- dynamicSDM::dynamic_proj_dates(as.character(historical_start),
                                         interval = 1,
                                         interval.level = "day")
 
+# Create directory to store near-term hindcasts of resource variables
 save_directory <- paste0(directory, "/Data/resource_hindcasts/",forecast_intitiation)
 
 dir.create(save_directory, recursive = T)
@@ -74,16 +81,13 @@ dir.create(save_directory, recursive = T)
 
 # Generate moving window matrix for summing resource variables across the 10km
 # dispersal radius of quelea.
-
 matrix <- dynamicSDM::get_moving_window(radial.distance = 10000,
                                         spatial.res.degrees = spatial_resolution,
                                         spatial.ext = southernafrica)
 
 
-# MODIS Land Cover Type typically released at two-year lag but check catalog:
-#https://developers.google.com/earth-engine/datasets/catalog/MODIS_061_MCD12Q1
-# Change the number in brackets to 1 if last year's has been released sooner.
-
+# MODIS Land Cover Type released at two-year lag from real-time, replicate this
+# for near-term hindcasting
 resource_date <- forecast_intitiation %m-% years(2) 
 
 # Total available "shrubland", "grassland" and "cereal cropland" cells in area
@@ -203,28 +207,24 @@ dynamicSDM::extract_dynamic_raster(dates = selected_dates,
                                    temporal.direction = "prior",
                                    save.directory = paste0(save_directory, "/evi/"))
 
-
 #------------------------------------------------------------------------------
 # Step 4: Process, classify and project stages forwards to each interval
 #------------------------------------------------------------------------------
 library(randomForest)
 
-# Read in MODIS Land Cover Type Yearly for the most recent year (extracted in
-# step 8)
+# Read in MODIS Land Cover Type Yearly for the most recent year 
 landcover <- terra::rast(list.files(save_directory,
                                     full.names = T,
                                     pattern = "landcover")[1])
 
 # Run custom function for extracting EVI characteristics from 16-day EVI data
 # extracted in previous step.
-seed_forecast_dataframe <- get_evi_characterstics(directory = paste0(save_directory, "/evi/"),
+seed_forecast_dataframe <- get_evi_characteristics(directory = paste0(save_directory, "/evi/"),
                                                   land_cover = landcover,
                                                   spatial_ext = spatial_extent)
 
-
 # Read in fitted Random Forest classification models for classifying vegetation
 # phenology stages based upon 16-day EVI characteristics. 
-
 grass_classification_model <- readRDS(paste0(directory,"/Data/models/classification_model_grass.rds"))
 
 cereal_classification_model <- readRDS(paste0(directory,"/Data/models/classification_model_cereal.rds"))
@@ -233,7 +233,6 @@ cereal_classification_model <- readRDS(paste0(directory,"/Data/models/classifica
 # Read in extracted mean vegetation growth stage lengths, derived from MODIS
 # Land Cover Dynamics Yearly See:
 # https://developers.google.com/earth-engine/datasets/catalog/MODIS_061_MCD12Q1
-
 mean_lengths<-list.files(paste0(directory, "/Data/average_length_phenology/"),
                          pattern = ".tif",
                          full.names = T)
@@ -291,10 +290,7 @@ for (interval in 1:length(forecast_intervals)) {
                                          "_seed_abundance.tif"))
 }
 
-# Remove tifs from temporary directory as may contain very large files
-file.remove(list.files(tempdir(),pattern=".tif",full.names = T))
+# Remove files from temporary directory as may contain very large files
+file.remove(list.files(tempdir(), pattern = ".tif", full.names = T))
 
 }
-
-# At the end of this script, in your save directory you should have a folder for each
-# hindcast date, containing the resource variable data for each 2-week interval

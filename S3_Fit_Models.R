@@ -4,27 +4,31 @@
 
 # Please ensure that you have downloaded the GitHub repository that contains the
 # associated data sets and custom functions.
+# Found at: https://github.com/r-a-dobson/seasonal-forecasting-quelea
 
 # Provide path to "seasonal_forecasting_quelea" directory downloaded from GitHub
 directory <- "C:/Users/XXXXX/Downloads/seasonal_forecasting_quelea/"
 
-# Set this directory as your working directory for analyses
+# Set this as your working directory
 setwd(directory)
 
-# Read in the custom functions written for seasonal forecasting
+# Read in the custom functions for near-term hindcasting
 source(paste0(directory, "/", "Functions_For_Forecast.R"))
+
+user.email <- "" # Set the email address registered with your GEE account
 
 #------------------------------------------------------------------------------
 # Step 1: Extract dynamic weather variables for occurrence records
 #------------------------------------------------------------------------------
 
+# Load required packages
 library(dplyr)
 library(dynamicSDM)
 library(readr)
 library(gbm)
 library(pROC)
 
-# Read in breeding and non-breeding occurrence data
+# Read in breeding and non-breeding occurrence records
 quelea_br_data <- read.csv("Data/breeding_distribution_quelea.csv")
 
 quelea_nbr_data <- read.csv("Data/nonbreeding_distribution_quelea.csv")
@@ -41,6 +45,8 @@ precipitation_dir <- "" # Insert path to CHELSA-W5E5 precipitation files
 
 temperature_dir <- "" # Insert path to CHELSA-W5E5 temperature files
 
+# Returns data with associated weather variables extracted from
+# the CHELSA daily data
 quelea_br_data <- extract_chelsa(quelea_br_data, precipitation_dir, temperature_dir)
 
 quelea_nbr_data <- extract_chelsa(quelea_nbr_data, precipitation_dir, temperature_dir)
@@ -60,7 +66,7 @@ save_directory_roost_resource <- paste0(directory, "/dynamic_resource_roost")
 # Get moving window matrix size
 matrix <- dynamicSDM::get_moving_window(radial.distance = 10000,
                                         spatial.res.degrees = 0.05,
-                                        spatial.ext = c(-35, -6, 10, 40)  )
+                                        spatial.ext = c(-35, -6, 10, 40))
 #----------------------
 # a) Breeding records
 #----------------------
@@ -213,20 +219,20 @@ extract_buffered_coords(occ.data = quelea_nbr_data,
                         save.directory = save_directory_roost_resource)
 
 # Total available trees
-extract_buffered_coords(occ.data=quelea_nbr_data,
+extract_buffered_coords(occ.data = quelea_nbr_data, 
                         datasetname = "MODIS/006/MCD12Q1",
                         bandname="LC_Type5",
                         spatial.res.metres = 500,
                         GEE.math.fun = "sum",
-                        moving.window.matrix=matrix,
-                        user.email=user.email,
+                        moving.window.matrix = matrix, 
+                        user.email = user.email, 
                         resume=T,
-                        save.method="split",
-                        temporal.level="year",
-                        categories=4,
+                        save.method = "split",
+                        temporal.level = "year",
+                        categories = 4, 
                         agg.factor = 12,
                         varname = "tree_availability",
-                        save.directory=save_directory_roost_resource)
+                        save.directory = save_directory_roost_resource)
 
 #------------------------------------------------------------------------------
 # Step 3: Combine extracted explanatory variables 
@@ -266,9 +272,10 @@ quelea_nbr_data <- extract_coords_combine(varnames = variablenames,
                                                                   tree_availability = "integer"))
 
 #------------------------------------------------------------------------------
-# Step 4: Extract biome layer and split occurrence data into blocks 
+# Step 4: Extract biome layer and split occurrence data into spatiotemporal blocks 
 #------------------------------------------------------------------------------
 
+# Set names of variables to block records by 
 variables_to_block_by <- c("mean_annual_temperature",
                            "sd_annual_temperature",
                            "sum_annual_precipitation")
@@ -280,13 +287,13 @@ dynamicSDM::extract_dynamic_raster(dates = "2001-01-01",
                                    spatial.res.metres = 1000 ,
                                    GEE.math.fun = "first",
                                    resume = T,
-                                   user.email = GEE_email,
+                                   user.email = user.email,
                                    varname = "biome_layer",
                                    temporal.res = 1 ,
                                    temporal.direction = "post",
                                    save.directory = paste0(directory,"/Data/"))
 
-# Read in biome layer
+# Read in downloaded biome layer
 biome_layer <- terra::rast(paste0(directory,"/Data/2001-01-01_biome_layer.tif"))
 
 # Spatial and temporal blocking of occurrence data for model fitting
@@ -320,8 +327,9 @@ model_variables <- c("mean_annual_temperature",
 #------------------------------------------------------------------------------
 # Step 5: Generate baseline D-SDMs using all available data 
 #------------------------------------------------------------------------------
+
 # Fit Boosted Regression Tree models to each data block, with weights 
-# representative of avian sampling effort
+# representative of avian sampling effort from eBird records (https://ebird.org/home)
 
 breed_SDM_models <- brt_fit(occ.data = breed_blocked,
                             response.col = "presence_absence",
@@ -338,17 +346,23 @@ nonbreed_SDM_models <- brt_fit(occ.data = nonbreed_blocked,
                                weights.col = "weights")
 
 #-------------------------------------------------
-# Measure AUC to identify top-performing D-SDM
+# Measure AUC to identify top-performing D-SDM 
 #-------------------------------------------------
+
 breed_sdm_weights = NULL
 
 for (x in 1:length(unique(breed_blocked$BLOCK.CATS))) {
+  
   block <- x
+  
   mod <- breed_SDM_models[[x]]
+  
   test <- breed_blocked[breed_blocked$BLOCK.CATS == block,]
   
   test$pred <- predict(mod, newdata = test, type = 'response')
+  
   auc <- pROC::auc(pROC::roc(presence_absence ~ pred, data = test, quiet = T))
+  
   breed_sdm_weights <- rbind(breed_sdm_weights, auc)
   
 }
@@ -357,12 +371,17 @@ for (x in 1:length(unique(breed_blocked$BLOCK.CATS))) {
 nonbreed_sdm_weights = NULL
 
 for (x in 1:length(unique(nonbreed_blocked$BLOCK.CATS))) {
+  
   block <- unique(nonbreed_blocked$BLOCK.CATS)[x]
+  
   mod <- nonbreed_SDM_models[[x]]
+  
   test <- nonbreed_blocked[nonbreed_blocked$BLOCK.CATS == block, ]
   
   test$pred <- predict(mod, newdata = test, type = 'response')
+  
   auc <- pROC::auc(pROC::roc(presence_absence ~ pred, data = test, quiet = T))
+  
   nonbreed_sdm_weights <- rbind(nonbreed_sdm_weights, auc)
   
 }
@@ -395,12 +414,12 @@ days<-c(1)
 dataframe <- as.data.frame(expand.grid(years, months, days))
 
 quelea_br_data$date <- as.Date(with(quelea_br_data, paste(year, month, day, sep = "-")), "%Y-%m-%d")
+
 quelea_nbr_data$date <- as.Date(with(quelea_nbr_data, paste(year, month, day, sep = "-")), "%Y-%m-%d")
 
 save_dir <- paste0(directory,"SDMs/")
 
 results <- NULL
-
 
 for (x in 1:nrow(dataframe)) {
   
@@ -421,15 +440,17 @@ for (x in 1:nrow(dataframe)) {
   
   quelea_nbr_data_maximal <- quelea_nbr_data[!(quelea_nbr_data$date >= start_date & quelea_nbr_data$date <= end_date), ]
   
+  
+  # Get testing dataset containing occurrence records from near-term hindcast period only
   br_test  <- quelea_br_data[(quelea_br_data$date >= start_date & quelea_br_data$date <= end_date), ]
   
   nbr_test <- quelea_nbr_data[(quelea_nbr_data$date >= start_date & quelea_nbr_data$date <= end_date), ]
   
   
-  ###############################################################
-  # Fit real-time D-SDMs for breeding and non-breeding
-  ###############################################################
- 
+  #-------------------------------------------------------------------------------
+  # Fit real-time D-SDMs using parameters from baseline D-SDMs
+  #-------------------------------------------------------------------------------
+  
   quelea_br_data_real_model <- brt_fit(occ.data = quelea_br_data_real,
                                        response.col = "presence_absence",
                                        varnames = model_variables,
@@ -448,10 +469,10 @@ for (x in 1:nrow(dataframe)) {
                                         shrinkage = nbr_shrinkage,
                                         weights.col = "weights")
   
-  ###############################################################
-  # Fit maximal D-SDMs for breeding and non-breeding
-  ###############################################################
-
+  #-------------------------------------------------------------------------------
+  # Fit maximal D-SDMs using parameters from baseline D-SDMs
+  #-------------------------------------------------------------------------------
+  
   quelea_br_data_maximal_model <- brt_fit(occ.data = quelea_br_data_maximal,
                                              response.col = "presence_absence",
                                              varnames = model_variables,
@@ -470,6 +491,9 @@ for (x in 1:nrow(dataframe)) {
                                                 shrinkage = nbr_shrinkage,
                                                 weights.col = "weights")
   
+  #-------------------------------------------------------------------------------
+  # Calculate D-SDM performances using testing datasets
+  #-------------------------------------------------------------------------------
   
   br_test$pred <- predict(quelea_br_data_maximal_model, newdata = br_test, type = 'response')
   BR_MAX_AUC <- pROC::auc(pROC::roc(presence_absence ~ pred, data = br_test, quiet = T))
@@ -484,7 +508,7 @@ for (x in 1:nrow(dataframe)) {
   NBR_REAL_AUC <- pROC::auc(pROC::roc(presence_absence ~ pred, data = nbr_test, quiet = T))
   
   
-  # Record AUC for each D-SDM
+  # Store performances in data frame
   result <- data.frame(date = forecast_intitiation, 
                        BR_MAX_AUC = BR_MAX_AUC,
                        BR_REAL_AUC = BR_REAL_AUC,
@@ -502,5 +526,5 @@ for (x in 1:nrow(dataframe)) {
   
 }
 
-# Save D-SDM performances
-write.csv(results, file = paste0(save_dir, "DSDM_PERFORMANCES.csv"))
+# Save D-SDM performance data frame
+write.csv(results, file = paste0(save_dir, "_DSDM_PERFORMANCES.csv"))

@@ -6,21 +6,19 @@
 #
 # This script does not need to be opened or edited. It contains custom functions. This file
 # will be used to load functions into the main R scripts.
+#
 
-
-#' get_evi_characterstics Extracts EVI characterstics for vegetation growth
+#' get_evi_characteristics Extracts EVI characteristics for vegetation growth
 #' stage classification using 16-day MODIS EVI values from past 52-weeks.
-#' @param directory path to 16-day EVI rasters. 
+#' @param directory path to stored 16-day EVI rasters. 
 #' @param land_cover raster of land cover cells from MODIS Land Cover Yearly. 
 #' @param spatial_ext spatial polygon, the spatial extent to crop EVI data to. 
 
-get_evi_characterstics <- function(directory,
+get_evi_characteristics <- function(directory,
                                    land_cover,
                                    spatial_ext) {
   
-  library(dplyr)
-  
-  # List and stack the EVI rasters 
+  # Stack EVI data 
   evi_files <- list.files(directory, full.names = T)
   
   stack <-  evi_files %>% # list files to read in
@@ -30,7 +28,6 @@ get_evi_characterstics <- function(directory,
   
   
   # Extract EVI characteristics for stage classification
-  
   peakinlastyear <- max(stack, na.rm = T)
   
   troughinlastyear <- min(stack, na.rm = T)
@@ -104,7 +101,7 @@ get_evi_characterstics <- function(directory,
 #' project_seed_availability Projects seed availability for each forecast
 #' interval using EVI characteristics and average vegetation growth stage
 #' lengths. 
-#' @param EVI_data_frame a data frame, the output of `get_evi_characterstics()`.
+#' @param EVI_data_frame a data frame, the output of `get_evi_characteristics()`.
 #' @param mean_lengths raster stack, the average lengths of each vegetation growth stage. 
 #' @param type one of; `cereal` or `grass`, the land cover cell type to project
 #'   seed availability for.
@@ -137,7 +134,7 @@ project_seed_availability <- function(EVI_data_frame ,
   # Get month that EVI characteristics were extracted for. 
   EVI_data_frame$month<-rep(lubridate::month(forecast_intitiation-14),nrow(EVI_data_frame))
   
-  # Project Random Forest classification model onto EVI characterstics
+  # Project Random Forest classification model using EVI characterstics
   EVI_data_frame$preds<-predict(model,EVI_data_frame)
   
   # If NA value (no EVI characteristics available), set cell as vegetation dormancy
@@ -150,7 +147,7 @@ project_seed_availability <- function(EVI_data_frame ,
                                                  "dormancy"), 
                                                c(1, 2, 5, 6, 7))))
   
-  stage_track<-NULL
+  stage_track <- NULL
   
   # Iterates through each vegetation stage in chronological order,
   # adds the average length to initial stage. 
@@ -160,62 +157,62 @@ project_seed_availability <- function(EVI_data_frame ,
     name <- vegetation_stages[i, 1]
     
     number <- vegetation_stages[i, 2]
-   
+    
     croped <-  dplyr::filter(EVI_data_frame, preds == number)
     
     if(i ==1){
       
-      phenology<-terra::extract(mean_lengths,y=as.matrix(croped[,c("x","y")])) 
-      phenology[,1] <- phenology[,1]/2
-      phenology[,2]<-phenology[,1]+phenology[,2]
-      phenology[,3]<-phenology[,2]+phenology[,3]
-      phenology[,4]<-phenology[,3]+phenology[,4]
+      phenology <- terra::extract(mean_lengths, y = as.matrix(croped[, c("x", "y")]))
+      phenology[, 1] <- phenology[, 1] / 2
+      phenology[, 2] <- phenology[, 1] + phenology[, 2]
+      phenology[, 3] <- phenology[, 2] + phenology[, 3]
+      phenology[, 4] <- phenology[, 3] + phenology[, 4]
       
-      stage_track<-rbind(stage_track,cbind(croped[,c("x","y")],phenology))
+      stage_track <- rbind(stage_track, cbind(croped[, c("x", "y")], phenology))
       
     }
     
     if(i ==2){
       
-      phenology<-terra::extract(mean_lengths,y=as.matrix(croped[,c("x","y")])) 
-      phenology[,1]<-rep(0,nrow(phenology))
-      phenology[,2]<-phenology[,1]+phenology[,2]
-      phenology[,2] <- phenology[,2]/2
-      phenology[,3]<-phenology[,2]+phenology[,3]
-      phenology[,4]<-phenology[,3]+phenology[,4]
-      stage_track<-rbind(stage_track,cbind(croped[,c("x","y")],phenology))}
+      phenology <- terra::extract(mean_lengths, y = as.matrix(croped[, c("x", "y")]))
+      phenology[, 1] <- rep(0, nrow(phenology))
+      phenology[, 2] <- phenology[, 1] + phenology[, 2]
+      phenology[, 2] <- phenology[, 2] / 2
+      phenology[, 3] <- phenology[, 2] + phenology[, 3]
+      phenology[, 4] <- phenology[, 3] + phenology[, 4]
+      stage_track <- rbind(stage_track, cbind(croped[, c("x", "y")], phenology))}
     
     
     if(i ==3){
       
-      phenology<-terra::extract(mean_lengths,y=as.matrix(croped[,c("x","y")])) 
-      phenology[,1]<-rep(0,nrow(phenology))
-      phenology[,2]<-rep(0,nrow(phenology))
-      phenology[,3]<-phenology[,2]+phenology[,3]
-      phenology[,3] <- phenology[,3]/2
-      phenology[,4]<-phenology[,3]+phenology[,4]
-      stage_track<-rbind(stage_track,cbind(croped[,c("x","y")],phenology))}
+      phenology <- terra::extract(mean_lengths, y = as.matrix(croped[, c("x", "y")]))
+      phenology[, 1] <- rep(0, nrow(phenology))
+      phenology[, 2] <- rep(0, nrow(phenology))
+      phenology[, 3] <- phenology[, 2] + phenology[, 3]
+      phenology[, 3] <- phenology[, 3] / 2
+      phenology[, 4] <- phenology[, 3] + phenology[, 4]
+      stage_track <- rbind(stage_track, cbind(croped[, c("x", "y")], phenology))}
     
     
     
     if(i ==4){
       
-      phenology<-terra::extract(mean_lengths,y=as.matrix(croped[,c("x","y")])) 
-      phenology[,1]<-rep(0,nrow(phenology))
-      phenology[,2]<-rep(0,nrow(phenology))
-      phenology[,3]<-rep(0,nrow(phenology))
-      phenology[,4]<-phenology[,3]+phenology[,4]
-      phenology[,4] <- phenology[,4]/2
-      stage_track<-rbind(stage_track,cbind(croped[,c("x","y")],phenology))}
+      phenology <- terra::extract(mean_lengths, y = as.matrix(croped[, c("x", "y")]))
+      phenology[, 1] <- rep(0, nrow(phenology))
+      phenology[, 2] <- rep(0, nrow(phenology))
+      phenology[, 3] <- rep(0, nrow(phenology))
+      phenology[, 4] <- phenology[, 3] + phenology[, 4]
+      phenology[, 4] <- phenology[, 4] / 2
+      stage_track <- rbind(stage_track, cbind(croped[, c("x", "y")], phenology))}
     
     
     if(i ==5){
       
       phenology<-terra::extract(mean_lengths,y=as.matrix(croped[,c("x","y")])) 
-      phenology[,1]<-rep(0,nrow(phenology))
-      phenology[,2]<-rep(0,nrow(phenology))
-      phenology[,3]<-rep(0,nrow(phenology))
-      phenology[,4]<-rep(0,nrow(phenology))
+      phenology[, 1] <- rep(0, nrow(phenology))
+      phenology[, 2] <- rep(0, nrow(phenology))
+      phenology[, 3] <- rep(0, nrow(phenology))
+      phenology[, 4] <- rep(0, nrow(phenology))
       
       stage_track<-rbind(stage_track,cbind(croped[,c("x","y")],phenology))}
     
@@ -233,9 +230,11 @@ project_seed_availability <- function(EVI_data_frame ,
     date_1 <- forecast_intervals[int]
     d1 <- forecast_doys[int]
     
+    
     seed <- matrix(0, nrow = nrow(stage_track), ncol = 1)
     seed <- dplyr::between(rep(d1, nrow(stage_track)), stage_track[, 4] - 7, stage_track[, 6] + 7)
     seed[stage_track[, 6] == 0] <- 0
+    
     rastero <- terra::rast(as.matrix(cbind(stage_track[, c("x", "y")],
                                            as.numeric(seed))),
                            type = "xyz")
@@ -290,7 +289,6 @@ generate_dates_past <- function(start_date) {
   
   subsequent_dates <- seq(from = year_date, by = "month", length.out = 12) # Generate 12 monthly dates
   
-  # Format the dates and return them
   return(as.Date(subsequent_dates)) # Exclude the starting date
 }
 
@@ -312,7 +310,7 @@ get_monthly_indices <- function(year, month, start_year = 2002, end_year = 2016)
   
   layers <- seq(from = 1, to = total_layers, by = daysin)
   
-  end <- layers[yearsin+1]-1
+  end <- layers[yearsin + 1] - 1
   
   start<- layers[yearsin]
   
@@ -333,7 +331,7 @@ get_monthly_indices_end <- function(year, month, start_year = 2002, end_year = 2
   
   total_layers <- daysin * duration
   
-  yearsin <-(year - start_year) +1
+  yearsin <- (year - start_year) + 1
   
   layers <- seq(from = 1, to = total_layers, by = daysin)
   
@@ -362,9 +360,9 @@ get_monthly_indices_past <- function(year, month, start_year = 2002, end_year = 
   
   layers <- seq(from = 1, to = total_layers, by = daysin)
   
-  end <- layers[yearsin+1]-1
+  end <- layers[yearsin + 1] - 1
   
-  start<- layers[yearsin]
+  start <- layers[yearsin]
   
   return(c(start))
 }
@@ -384,13 +382,13 @@ get_monthly_indices_end_past <- function(year, month, start_year = 2002, end_yea
   
   total_layers <- daysin * duration
   
-  yearsin <-(year - start_year) +1
+  yearsin <- (year - start_year) + 1
   
   layers <- seq(from = 1, to = total_layers, by = daysin)
   
-  end <- layers[yearsin+1]-1
+  end <- layers[yearsin + 1] - 1
   
-  start<- layers[yearsin]
+  start <- layers[yearsin]
   
   return(c(end))
 }
@@ -406,12 +404,13 @@ get_details <- function(forecast_date, ee, bias_corrected_SEAS5){
   
   dataframe <- data.frame(date = next_dates,
                           month = lubridate::month(next_dates),
-                          year = lubridate::year(next_dates)  )
-  dataframe <- dataframe[1:7,]
+                          year = lubridate::year(next_dates))
+  
+  dataframe <- dataframe[1:7, ]
   dataframe$LT <- rep(1:7)
   dataframe$EM <- rep(ee, nrow(dataframe))
   
-  dataframe$filename_prec <- paste0(bias_corrected_SEAS5,"/total_precipitation_LT",dataframe$LT, "_EM", dataframe$EM, "_MN", sprintf("%002d", dataframe$month), "_.nc")
+  dataframe$filename_prec <- paste0(bias_corrected_SEAS5, "/total_precipitation_LT", dataframe$LT, "_EM", dataframe$EM, "_MN", sprintf("%002d", dataframe$month), "_.nc")
   
   dataframe$filename_temp <- paste0(bias_corrected_SEAS5, "/2m_temperature_LT", dataframe$LT, "_EM", dataframe$EM, "_MN", sprintf("%002d",dataframe$month), "_.nc")
   
@@ -481,11 +480,11 @@ get_details_past <- function(forecast_date, bias_corrected_ERA5){
 
 process_nc_file <- function(filename, start_idx, end_idx, start_date) {
  
-  filename2 <- filename
+  filename_stored <- filename
   
   print(filename)
   
-  rast <- rast(filename2)
+  rast <- rast(filename_stored)
 
   # Extract the required layers based on start and end indices
   rast_subset <- rast[[as.numeric(start_idx):as.numeric(end_idx)]]
@@ -504,9 +503,9 @@ process_nc_file <- function(filename, start_idx, end_idx, start_date) {
 
     date_str <- format(dates[i], "%Y%m%d")
     
-    out_filename <- paste0(dates[i],"_SEAS5_", gsub(".nc", "",basename(filename2)), "_.tif")
+    out_filename <- paste0(dates[i],"_SEAS5_", gsub(".nc", "",basename(filename_stored)), "_.tif")
     
-    out_filenamenc <- paste0(dates[i],"_SEAS5_", gsub(".nc", "",basename(filename2)), "_.nc")
+    out_filenamenc <- paste0(dates[i],"_SEAS5_", gsub(".nc", "",basename(filename_stored)), "_.nc")
   
     writeRaster(rast_subset[[i]], filename = out_filename,  overwrite = TRUE)
     
@@ -523,11 +522,11 @@ process_nc_file <- function(filename, start_idx, end_idx, start_date) {
 process_nc_file_past <- function(filename, start_idx, end_idx, start_date) {
  
   # Read the NetCDF file
-  filename2<- as.character(filename)
+  filename_stored<- as.character(filename)
   
   print(filename)
   
-  rast <- rast(filename2)
+  rast <- rast(filename_stored)
   
   # Extract the required layers based on start and end indices
   rast_subset <- rast[[as.numeric(start_idx):as.numeric(end_idx)]]
@@ -546,13 +545,13 @@ process_nc_file_past <- function(filename, start_idx, end_idx, start_date) {
 
     date_str <- format(dates[i], "%Y%m%d")
     
-    out_filename <- paste0(dates[i],"_ERA5_", gsub(".nc", "",basename(filename2)), "_.tif")
+    out_filename <- paste0(dates[i],"_ERA5_", gsub(".nc", "", basename(filename_stored)), "_.tif")
     
-    out_filenamenc <- paste0(dates[i],"_ERA5_", gsub(".nc", "",basename(filename2)), "_.nc")
+    out_filenamenc <- paste0(dates[i],"_ERA5_", gsub(".nc", "", basename(filename_stored)), "_.nc")
     
     print(out_filenamenc)
     
-    writeRaster(rast_subset[[i]], filename = out_filename,  overwrite=TRUE)
+    writeRaster(rast_subset[[i]], filename = out_filename,  overwrite = TRUE)
     
   }
 }
@@ -626,7 +625,6 @@ extract_chelsa <- function(dataset, precipitation_dir, temperature_dir){
       eight_mean_temp <- rowMeans(eight, na.rm=T)   
       eight_sd_temp <- apply(eight,1,sd, na.rm = T)
       
-      
       n_3 <- which(grepl(dt, terra::time(all_prec)))
       
       n_4 <- n_3 - 365
@@ -637,13 +635,11 @@ extract_chelsa <- function(dataset, precipitation_dir, temperature_dir){
                                y = as.matrix(split_dataset_further[, c("x", "y")]),
                                method = "simple")
       
-      
       ann_sum_prec <- rowSums(values, na.rm=T)   
       ann_sd_prec <- apply(values,1,sd, na.rm = T)    
       eight <- values[(length(values) - (7*8)):length(values)]   
       eight_sum_prec <- rowSums(eight, na.rm=T)   
       eight_sd_prec <- apply(eight,1,sd, na.rm = T)   
-      
       
       extracted_data<- data.frame(mean_annual_temperature = ann_mean_temp,
                                   sd_annual_temperature = ann_sd_temp,
@@ -651,7 +647,6 @@ extract_chelsa <- function(dataset, precipitation_dir, temperature_dir){
                                   sd_eight_temperature =  eight_sd_temp,                               
                                   sum_annual_precipitation = ann_sum_prec,
                                   sum_eight_precipitation = eight_sum_prec)
-      
       
       all_together <- cbind(split_dataset_further, extracted_data)
       
