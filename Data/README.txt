@@ -1,8 +1,12 @@
 
-Metadata for: "breeding_distribution_quelea.csv" and "nonbreeding_distribution_quelea.csv"
+Documentation for occurrence datasets
+
+File names: 
+- breeding_distribution_quelea.csv - Occurrence records from the breeding season
+- nonbreeding_distribution_quelea.csv - Occurrence records from the non-breeding season
 
 Description:
-These datasets contain species occurrence records for the red-billed quelea (Quelea quelea) in the breeding and non-breeding seasons (2003-2019). Records were obtained from GBIF (2021) or control operation data sources. Each record represents either an observed species presence or a generated pseudo-absence, with associated coordinates and timestamp, as well as calculated weights representing sampling effort in the e-Bird dataset (Auer et al., 2022). 
+Occurrence records for the red-billed quelea (Quelea quelea) in the breeding and non-breeding seasons between 2003 and 2019. Records were obtained from GBIF (2021) or control operation data sources in southern Africa. Each record represents either an observed species presence or a generated pseudo-absence with associated coordinates and timestamps, as well as calculated weights representing sampling effort in the e-Bird dataset (Auer et al., 2022). 
 
 Columns:
 
@@ -54,10 +58,10 @@ Columns:
    - Type: Float
    - Details: The weight is calculated based on the total number of avian e-Bird sampling events within 
               a spatiotemporal buffer around the occurrence record location and date.
-   - Units: Relative (no specific units, used for modeling and analysis)
+   - Units: Relative (no specific units)
 
-Purpose of the Data:
-These datasets are used by the associated code to extract dynamic explanatory variables and generate dynamic species distribution models (D-SDMs) for the red-billed quelea. 
+Purpose:
+These datasets are used in the associated code to extract dynamic explanatory variables and generate dynamic species distribution models (D-SDMs) for the red-billed quelea. 
 
 Notes:
 - In both datasets, each row represents a unique species occurrence (2003-2019) or pseudo-absence record with associated metadata.
