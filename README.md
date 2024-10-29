@@ -41,6 +41,7 @@ The final outputs of the script are seasonal hindcasts of quelea distribution su
 
 - `nonbreeding_distribution_quelea.csv` - filtered non-breeding season occurrence records for *Quelea* *quelea* *lathamii* in southern Africa.
 
+- `README.txt` - description of occurrence data frames.
 
 ## `/Data/average_length_phenology`
 
