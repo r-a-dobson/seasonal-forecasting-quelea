@@ -55,6 +55,8 @@ The final outputs of the script are seasonal hindcasts of quelea distribution su
 
 - `Senescence_mean.tif` - average duration (number of days) of the vegetation stage "senescence" extracted from MODIS Land Cover Dynamics Yearly dataset; 
 
+- `README.txt` - description of .TIF files.
+
 FRIEDL, M., GRAY, J. & SULLA-MENASHE, D. 2019. MCD12Q2 MODIS/Terra+Aqua Land Cover Dynamics Yearly L3 Global 500m SIN Grid V006 [MCD12Q2].
 
 
@@ -63,6 +65,8 @@ FRIEDL, M., GRAY, J. & SULLA-MENASHE, D. 2019. MCD12Q2 MODIS/Terra+Aqua Land Cov
 - `classification_model_cereal.rds` - Random Forest classification model for classifying vegetation growth stages in cereal croplands land cover cells (Friedl and Sulla-Menashe, 2019) based upon remote-sensed enhanced vegetation index (EVI) characteristics extracted from Didan (2021);
 
 - `classification_model_grass.rds` - Random Forest classification model for classifying vegetation growth stages in grasslands based upon remote-sensed EVI characteristics.
+
+- `README.txt` - description of Random Forest models.
 
 DIDAN, K. 2021. MODIS/Terra Vegetation Indices 16-Day L3 Global 250m SIN Grid V061 [Data set]. NASA EOSDIS Land Processes DAAC. 
 
