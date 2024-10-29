@@ -29,9 +29,9 @@ library(gbm)
 library(pROC)
 
 # Read in breeding and non-breeding occurrence records
-quelea_br_data <- read.csv("Data/breeding_distribution_quelea.csv")
+quelea_br_data <- read.csv("Data/occurrence_data/breeding_distribution_quelea.csv")
 
-quelea_nbr_data <- read.csv("Data/nonbreeding_distribution_quelea.csv")
+quelea_nbr_data <- read.csv("Data/occurrence_data/nonbreeding_distribution_quelea.csv")
 
 #-------------------------------------------
 # Extract 8- and 52-week weather variables
